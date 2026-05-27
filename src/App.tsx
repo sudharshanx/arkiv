@@ -257,44 +257,44 @@ function HomePage() {
     <main className="care-home">
       <header className="care-bar">
         <a className="care-brand" href="/">
-          <span className="care-brand-mark">AK</span>
-          <span>Arkiv Context</span>
+          <span className="care-brand-mark">CP</span>
+          <span>Care Passport</span>
         </a>
         <nav className="care-nav" aria-label="Product navigation">
           <a href="/">Home</a>
-          <a href={viewHref("write", false)}>Write</a>
-          <a href={viewHref("grant", false)}>Grant</a>
-          <a href={viewHref("workbench", false)}>Workbench</a>
+          <a href={viewHref("write", false)}>Create reflection</a>
+          <a href={viewHref("grant", false)}>Share access</a>
+          <a href={viewHref("workbench", false)}>Dashboard</a>
         </nav>
       </header>
 
       <section className="care-hero">
         <div className="care-hero-copy">
           <p className="care-label">Private memory for care continuity</p>
-          <h1>A diary you own. Context you choose to share.</h1>
+          <h1>A diary you own. A share list you control.</h1>
           <p className="care-lead">
-            Keep encrypted care notes in one place. Share only the context that helps the next therapist understand
-            you.
+            Keep encrypted care notes in one place. See who has access, choose what to share, and revoke it when you
+            need to.
           </p>
           <p className="care-lead">
-            Arkiv Context is a private, wallet-owned life memory system. It is not an AI therapist and not a medical
-            record system.
+            Care Passport is a private, wallet-owned care system. It is not a chatbot and not a medical record
+            system.
           </p>
           <div className="care-actions">
             <a className="care-btn primary" href={viewHref("write", false)}>
               <Plus size={16} />
-              <span>Write a note</span>
+              <span>Create reflection</span>
             </a>
             <a className="care-btn" href={viewHref("grant", false)}>
               <ShieldCheck size={16} />
-              <span>Choose what to share</span>
+              <span>Share access</span>
             </a>
           </div>
         </div>
 
-        <aside className="care-console" aria-label="Private care continuity console">
+        <aside className="care-console" aria-label="Care Passport access preview">
           <div className="care-console-head">
-            <span className="label">ARKIV://PRIVATE-DIARY</span>
+            <span className="label">CARE PASSPORT</span>
             <span className="label">Local key active</span>
           </div>
           <div className="care-console-body">
@@ -317,10 +317,10 @@ function HomePage() {
             </div>
             <div className="care-console-column">
               <div className="care-grant-preview">
-                <span>Consent review</span>
+                <span>Who has access</span>
                 <h3>14-day access</h3>
                 <p>Give one therapist time-bound access. It ends automatically unless you renew it.</p>
-                <strong>Ready to grant</strong>
+                <strong>Revoke anytime</strong>
               </div>
               <div className="care-grant-preview">
                 <span>Privacy boundary</span>
@@ -329,7 +329,7 @@ function HomePage() {
             </div>
           </div>
           <div className="care-console-foot">
-            <span>Proof visible on demand</span>
+            <span>Proof details on demand</span>
             <span>Revoke anytime</span>
           </div>
         </aside>
@@ -339,7 +339,7 @@ function HomePage() {
         <div className="care-section-head">
           <div>
             <p className="care-label">Core flow</p>
-            <h2>Write. Protect. Grant. Use. Revoke.</h2>
+            <h2>Connect. Create. Review. Share. Revoke.</h2>
           </div>
           <p>
             The user owns the diary entries, encrypts them locally, and controls who can see them, for how long, and
@@ -348,25 +348,25 @@ function HomePage() {
         </div>
         <div className="care-flow-grid">
           <article>
-            <span>Write</span>
-            <h3>Structured reflections</h3>
-            <p>Capture life events, emotions, triggers, coping patterns, therapy goals, and preferences.</p>
+            <span>Connect</span>
+            <h3>Wallet ownership</h3>
+            <p>Connect MetaMask so Care Passport knows which wallet owns the care record.</p>
           </article>
           <article>
-            <span>Protect</span>
-            <h3>Local encryption</h3>
-            <p>Encrypt the diary on your device before it becomes a wallet-owned Arkiv record.</p>
+            <span>Create</span>
+            <h3>Private reflections</h3>
+            <p>Write a private reflection and encrypt it locally before it becomes an Arkiv record.</p>
           </article>
           <article>
-            <span>Grant</span>
-            <h3>Time-bound sharing</h3>
-            <p>Give a therapist wallet access to the context you approve, for the time you choose.</p>
+            <span>Share</span>
+            <h3>Time-bound access</h3>
+            <p>Choose the therapist wallet, the notes, and the duration before creating access.</p>
           </article>
         </div>
       </section>
 
       <footer className="care-footer">
-        <span>Arkiv Context</span>
+        <span>Care Passport</span>
         <span>Your life context should move with you, but stay under your control</span>
       </footer>
     </main>
@@ -967,13 +967,13 @@ function CareApp() {
         </a>
         <nav className="care-nav" aria-label="App navigation">
           <button className={view === "write" ? "active" : ""} onClick={() => navigate("write")} type="button">
-            Write
+            Create reflection
           </button>
           <button className={view === "grant" ? "active" : ""} onClick={() => navigate("grant")} type="button">
-            Grant
+            Share access
           </button>
           <button className={view === "workbench" ? "active" : ""} onClick={() => navigate("workbench")} type="button">
-            Workbench
+            Dashboard
           </button>
         </nav>
         <div className="care-wallet-actions">
@@ -994,9 +994,16 @@ function CareApp() {
       <section className="care-status-line">
         <span>
           <strong>Care Passport.</strong> Encrypted reflections, wallet-owned Arkiv records, and time-bound therapist
-          grants.
+          access.
         </span>
-        <StatusDot tone={wallet ? "success" : "warn"}>{wallet ? "Wallet ready" : "Wallet needed"}</StatusDot>
+        <div className="care-status-actions">
+          <StatusDot tone={wallet ? "success" : "warn"}>{wallet ? "Wallet ready" : "Wallet needed"}</StatusDot>
+          {!wallet && (
+            <ActionButton className="primary" icon={<Wallet size={14} />} onClick={handleConnect}>
+              Connect wallet
+            </ActionButton>
+          )}
+        </div>
       </section>
 
       {error && (
@@ -1133,7 +1140,7 @@ function renderWriteView(props: {
     <section className="care-wrap">
       <div className="care-intro">
         <div>
-          <p className="care-label">Write / protect</p>
+          <p className="care-label">Create reflection</p>
           <h1>Create a private reflection.</h1>
           <p className="care-lead">
             Structured entries help future care without forcing the user to retell everything. Content is encrypted
@@ -1245,10 +1252,10 @@ function renderWriteView(props: {
           <div className="care-actions">
             <button className="care-btn primary" disabled={busy === "entry" || !wallet} type="submit">
               <Database size={16} />
-              <span>{busy === "entry" ? "Saving" : "Save encrypted entry"}</span>
+              <span>{busy === "entry" ? "Saving" : "Save encrypted reflection"}</span>
             </button>
             <ActionButton icon={<ShieldCheck size={16} />} onClick={() => navigate("grant")}>
-              Prepare grant
+              Review access
             </ActionButton>
           </div>
           {renderFeedback(entryFeedback, "Entry")}
@@ -1256,7 +1263,7 @@ function renderWriteView(props: {
 
         <aside className="care-panel">
           <div className="care-panel-head">
-            <h2>Entry preview</h2>
+            <h2>Reflection preview</h2>
             <StatusDot tone={keyReady ? "success" : "danger"}>{keyReady ? "Unlocked" : "Locked"}</StatusDot>
           </div>
           <div className="care-preview">
@@ -1341,36 +1348,35 @@ function renderGrantView(props: {
     <section className="care-wrap">
       <div className="care-intro">
         <div>
-          <p className="care-label">Grant / consent review</p>
-          <h1>Prepare a therapist-ready care packet.</h1>
+          <p className="care-label">Share access</p>
+          <h1>Choose who can see this.</h1>
           <p className="care-lead">
-            Choose the therapist wallet, access purpose, duration, and exact reflections before any access grant is
-            created.
+            Choose the therapist wallet, the notes, and the time window before any access is created.
           </p>
         </div>
         <div className="care-panel">
           <StatusDot tone="warn">Consent required</StatusDot>
-          <p>Full-view access and selected packets both expire. Revoke remains available after the grant is active.</p>
+          <p>Full-view access and selected packets both expire. Revoke remains available after access is active.</p>
         </div>
       </div>
 
       <div className="care-two-column">
         <form className="care-panel care-stack" onSubmit={handleCreateGrant}>
           <div className="care-panel-head">
-            <h2>Therapist access</h2>
+            <h2>Share details</h2>
             <span>Time-bound</span>
           </div>
 
-          <TextField label="Therapist wallet identity">
+          <TextField label="Therapist wallet">
             <input onChange={(event) => setGrantWallet(event.target.value)} value={grantWallet} />
           </TextField>
 
-          <TextField label="Purpose">
+          <TextField label="Why share this?">
             <textarea onChange={(event) => setGrantPurpose(event.target.value)} value={grantPurpose} />
           </TextField>
 
           <div className="care-field">
-            <span>Access scope</span>
+            <span>What can they see?</span>
             <div className="care-choice-grid">
               <label className="care-choice">
                 <input
@@ -1379,8 +1385,8 @@ function renderGrantView(props: {
                   onChange={() => setGrantScope("selected_packet")}
                   type="radio"
                 />
-                <span>Selected packet</span>
-                  <small>Only chosen reflections enter the care packet.</small>
+                <span>Selected notes</span>
+                <small>Only chosen reflections enter the care packet.</small>
               </label>
               <label className="care-choice">
                 <input
@@ -1390,7 +1396,7 @@ function renderGrantView(props: {
                   type="radio"
                 />
                 <span>Full view</span>
-                  <small>All readable, non-private-locked entries for the grant window.</small>
+                <small>All readable, non-private-locked notes for the grant window.</small>
               </label>
             </div>
           </div>
@@ -1404,7 +1410,7 @@ function renderGrantView(props: {
           </TextField>
 
           <div className="care-field">
-            <span>Included context</span>
+            <span>Selected notes</span>
             <div className="care-memory-list flat">
               {eligibleNotes.length ? (
                 eligibleNotes.map((note) => (
@@ -1437,7 +1443,7 @@ function renderGrantView(props: {
               <span>{busy === "grant" ? "Creating" : "Create access grant"}</span>
             </button>
             <ActionButton icon={<FileText size={16} />} onClick={() => navigate("workbench")}>
-              Review packet
+              Review dashboard
             </ActionButton>
             <ActionButton icon={<RefreshCw size={16} />} onClick={() => setSelectedKeys(new Set(eligibleNotes.map((note) => note.entityKey)))}>
               Select all readable
@@ -1448,7 +1454,7 @@ function renderGrantView(props: {
 
         <aside className="care-panel">
           <div className="care-panel-head">
-            <h2>Grant terms</h2>
+            <h2>Access summary</h2>
             <span>{grantIncluded.length} selected</span>
           </div>
           <div className="care-review">
@@ -1459,11 +1465,11 @@ function renderGrantView(props: {
             </article>
             <article>
               <span>Scope</span>
-              <h3>{grantScope === "temporary_full_view" ? "Temporary full-view access" : "Selected care packet"}</h3>
+              <h3>{grantScope === "temporary_full_view" ? "Temporary full-view access" : "Selected notes only"}</h3>
               <p>Expires after {grantDays} days. Access can be revoked before expiry.</p>
             </article>
             <article>
-              <span>Included reflections</span>
+              <span>Included notes</span>
               <p>
                 {grantIncluded.length
                   ? grantIncluded.map((note) => `- ${safeText(note.decrypted?.title)}`).join("\n")
@@ -1557,7 +1563,7 @@ function renderWorkbenchView(props: {
         <div className="care-panel-head">
           <div>
             <h2>Memories</h2>
-            <p>Select context for this grant.</p>
+            <p>Select the notes this session can use.</p>
           </div>
           <span>{selectedNotes.length} selected</span>
         </div>
@@ -1625,27 +1631,27 @@ function renderWorkbenchView(props: {
         <div className="care-panel">
           <div className="care-panel-head">
             <div>
-              <h1>Care packet review</h1>
-              <p>A therapist-ready packet built from selected Reflection Entries. Proof stays collapsed until you inspect it.</p>
+              <h1>Access dashboard</h1>
+              <p>See what is selected, who can access it, and what gets copied before you share anything.</p>
             </div>
             <span>{selectedNotes.length} memories</span>
           </div>
           <div className="care-trust-grid" aria-label="Trust summary">
             <div>
-              <StatusDot tone={activeVault ? "success" : "warn"}>{activeVault ? "Verified" : "Waiting"}</StatusDot>
-              <p>{rehearsal ? "Local rehearsal records" : "Wallet-owned records"}</p>
+              <StatusDot tone={activeVault ? "success" : "warn"}>{activeVault ? "Connected" : "Waiting"}</StatusDot>
+              <p>{wallet ? shortAddress(wallet) : "Connect a wallet"}</p>
             </div>
             <div>
               <StatusDot tone={readableNotes.length ? "success" : "warn"}>{readableNotes.length ? "Protected" : "Locked"}</StatusDot>
               <p>Encrypted locally</p>
             </div>
             <div>
-              <StatusDot tone={activeGrant ? "warn" : "muted"}>{activeGrant ? "Limited" : "No grant"}</StatusDot>
-              <p>{activeGrant ? `Grant expires ${formatDate(activeGrant.expiresAt)}` : "Create access grant"}</p>
+              <StatusDot tone={activeGrant ? "warn" : "muted"}>{activeGrant ? "Sharing" : "No access"}</StatusDot>
+              <p>{activeGrant ? `Access ends ${formatDate(activeGrant.expiresAt)}` : "No one has access yet"}</p>
             </div>
             <div>
               <StatusDot tone={selectedNotes.length ? "success" : "warn"}>{selectedNotes.length ? "Ready" : "Review"}</StatusDot>
-              <p>{privateLockedCount ? `${privateLockedCount} private locked` : "Consent reviewed"}</p>
+              <p>{privateLockedCount ? `${privateLockedCount} private locked` : "Review selected notes"}</p>
             </div>
           </div>
         </div>
@@ -1653,7 +1659,7 @@ function renderWorkbenchView(props: {
         <div className="care-panel">
           <div className="care-selected-strip">
             <div>
-              <span>What the therapist receives</span>
+              <span>What gets shared</span>
               <p>A readable care packet, not raw network records. Private-locked and unselected entries stay out.</p>
             </div>
             <div className="care-actions">
@@ -1673,34 +1679,44 @@ function renderWorkbenchView(props: {
 
         <div className="care-panel">
           <div className="care-panel-head">
-            <h2>Grant terms</h2>
-            <span>{activeGrant ? grantStatus(activeGrant) : "none"}</span>
+            <h2>Who has access</h2>
+            <span>{grants.length ? `${grants.length} record${grants.length === 1 ? "" : "s"}` : "none"}</span>
           </div>
-          {activeGrant ? (
-            <div className="care-grant-row">
-              <div>
-                <h3>
-                  {activeGrant.scope === "temporary_full_view" ? "Temporary full-view access" : "Selected care packet access"}
-                </h3>
-                <p>
-                  Therapist wallet {shortAddress(activeGrant.therapistWallet)} can use the approved context until{" "}
-                  {formatDate(activeGrant.expiresAt)}.
-                </p>
-                <p>Not included: private-locked and unselected entries stay out of this packet.</p>
-              </div>
-              <ActionButton
-                className="danger"
-                disabled={busy === "revoke"}
-                icon={<XCircle size={16} />}
-                onClick={() => void revokeGrant(activeGrant.entityKey)}
-              >
-                {busy === "revoke" ? "Revoking" : "Revoke"}
-              </ActionButton>
+          {grants.length ? (
+            <div className="care-access-list">
+              {grants.map((grant) => {
+                const status = grantStatus(grant);
+                const isActive = status === "active";
+                return (
+                  <article className={classNames("care-access-row", isActive && "active")} key={grant.entityKey}>
+                    <div>
+                      <span>{isActive ? "Active access" : status}</span>
+                      <h3>{grant.scope === "temporary_full_view" ? "Full view" : "Selected notes only"}</h3>
+                      <p>
+                        Therapist wallet {shortAddress(grant.therapistWallet)} can use the approved context until{" "}
+                        {formatDate(grant.expiresAt)}.
+                      </p>
+                    </div>
+                    {isActive ? (
+                      <ActionButton
+                        className="danger"
+                        disabled={busy === "revoke"}
+                        icon={<XCircle size={16} />}
+                        onClick={() => void revokeGrant(grant.entityKey)}
+                      >
+                        {busy === "revoke" ? "Revoking" : "Revoke access"}
+                      </ActionButton>
+                    ) : (
+                      <StatusDot tone={status === "revoked" ? "danger" : "muted"}>{status}</StatusDot>
+                    )}
+                  </article>
+                );
+              })}
             </div>
           ) : (
             <div className="care-empty inline">
-              <strong>No active grant</strong>
-              <p>Create a therapist access grant to prove consent metadata on Arkiv.</p>
+              <strong>No one has access yet</strong>
+              <p>Create a therapist access grant to show who can read selected notes.</p>
             </div>
           )}
         </div>
@@ -1773,7 +1789,7 @@ function reflectionLabelFromDraft(draft: DraftNote): string {
 function buildContinuityPacket(notes: NoteRecord[], grant: AccessGrantRecord | undefined, rehearsal: boolean): string {
   const selected = notes.filter((note) => note.decrypted && !note.decrypted.privateLocked);
   if (!selected.length) {
-    return "Select at least one readable, non-private-locked reflection to prepare a Care Passport continuity packet.";
+    return "Select at least one readable, non-private-locked reflection to prepare a Care Passport care packet.";
   }
 
   const lines = selected.map((note) => {
@@ -1790,7 +1806,7 @@ function buildContinuityPacket(notes: NoteRecord[], grant: AccessGrantRecord | u
   });
 
   return [
-    "Care Passport continuity packet",
+    "Care Passport care packet",
     "",
     "Use this context for care continuity during the current grant window only.",
     "Only selected Reflection Entries are included. Private-locked entries and unselected entries are not part of this packet.",
