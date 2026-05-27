@@ -8,19 +8,17 @@ const license = readFileSync(new URL("../LICENSE", import.meta.url), "utf8");
 const readme = readFileSync(new URL("../README.md", import.meta.url), "utf8");
 const normalizedReadme = readme.replace(/\s+/g, " ");
 
-test("README locks the Care Passport pitch, product promise, and submission status", () => {
+test("README locks the Care Passport pitch and product promise", () => {
   assert.match(readme, /# Care Passport/);
-  assert.match(readme, /\*\*AI \+ Privacy hybrid for private care continuity\.\*\*/);
-  assert.match(readme, /Care Passport helps people change therapists without starting over by preparing a wallet-owned, therapist-ready care packet they control\./);
-  assert.match(readme, /Product promise: user-controlled care context that is owned by the wallet, decrypted locally, verified before use, and shared only through an explicit Access Grant\./);
+  assert.match(readme, /Care Passport helps people keep private care notes, see who has access, and share only what they choose\./);
+  assert.match(readme, /Product promise: `Care Passport keeps private care notes encrypted locally, stored on Arkiv, reviewed before sharing, and revocable at any time\.`/);
+  assert.match(readme, /Submission status:/);
   assert.match(readme, /Deployed app URL: https:\/\/arkiv-vert\.vercel\.app\/app/);
   assert.match(readme, /GitHub repo: https:\/\/github\.com\/sudharshanx\/arkiv/);
   assert.match(readme, /Challenge form: https:\/\/forms\.arkiv\.network\/ethns-arkiv-challenge/);
   assert.match(readme, /Official rules: https:\/\/github\.com\/Arkiv-Network\/arkiv-ethns-builder-challenge/);
   assert.match(readme, /License: MIT/);
   assert.match(readme, /Team: Sudharshan; add additional team members before submission if needed\./);
-  assert.match(readme, /Submit by May 25, 2026 at 23:59 UTC\./);
-  assert.match(readme, /Late submissions are not accepted/);
 });
 
 test("repo declares an open source license for submission", () => {
@@ -42,7 +40,7 @@ test("Vercel serves the app deep link through the Vite SPA entry", () => {
   ]);
 });
 
-test("README documents setup, verification, and demo order", () => {
+test("README documents setup, demo order, and the dashboard story", () => {
   for (const command of [
     "npm install",
     "npm run dev",
@@ -54,46 +52,41 @@ test("README documents setup, verification, and demo order", () => {
     assert.match(readme, new RegExp(command));
   }
 
-  assert.match(normalizedReadme, /Choose -> Review -> Share -> Expire/);
-  assert.match(normalizedReadme, /Write -> Grant -> Workbench/);
-  assert.match(normalizedReadme, /Write a wallet-owned Reflection Entry by connecting MetaMask on Braga/);
-  assert.match(normalizedReadme, /Review the Access Grant by selecting readable Reflection Entries/);
-  assert.match(normalizedReadme, /Copy the Continuity Brief and verified receipt/);
-  assert.match(normalizedReadme, /Use `\/app` for the current wallet-owned proof path\./);
-  assert.match(normalizedReadme, /Confirm the Diary Space, Reflection Entry, and Access Grant receipts include entity keys and Braga Explorer transaction links\./);
+  assert.match(normalizedReadme, /Connect wallet -> Create a private reflection -> Review selected notes -> Choose audience -> Share -> Copy care packet -> Revoke access/);
+  assert.match(normalizedReadme, /Open `\/app`\./);
+  assert.match(normalizedReadme, /Connect the wallet\./);
+  assert.match(normalizedReadme, /Choose audience: AI agent context or therapist raw data\./);
+  assert.match(normalizedReadme, /Open `Proof details` only if proof is needed\./);
+  assert.match(normalizedReadme, /Create access grant with recipient wallet, notes, and duration\./);
   assert.match(readme, /\/app\?rehearsal=1/);
-  assert.match(readme, /without MetaMask, Braga RPC, or Explorer links/);
-  assert.match(readme, /Rehearsal is local\/no Braga/);
-  assert.ok(
-    readme.indexOf("Write a wallet-owned Reflection Entry") <
-      readme.indexOf("Review the Access Grant"),
-  );
+  assert.match(readme, /local\/no Braga/);
+  assert.ok(readme.indexOf("Connect the wallet.") < readme.indexOf("Show who has access."));
 });
 
-test("README mirrors the published judging weights", () => {
-  assert.match(readme, /Theme: \*\*AI \+ Privacy hybrid\*\*/);
-  assert.match(readme, /Arkiv integration depth: 40%/);
-  assert.match(readme, /Functionality: 30%/);
-  assert.match(readme, /Design & UX: 20%/);
-  assert.match(readme, /Code quality & docs: 10%/);
+test("README keeps the narrative concrete and product-first", () => {
+  assert.match(readme, /What Care Passport Is/);
+  assert.match(readme, /A wallet-owned encrypted diary that stays with the user\./);
+  assert.match(readme, /AI-agent-assisted review/);
+  assert.match(readme, /A proof-first Arkiv app with encrypted writes and readable receipts\./);
+  assert.match(readme, /What It Is Not/);
+  assert.doesNotMatch(readme, /Continuity Brief/);
 });
 
-test("README includes an AI and care tool integration snippet", () => {
-  assert.match(readme, /## How AI and care tools integrate/);
-  assert.match(readme, /const continuityBrief = `PASTE COPIED CARE PASSPORT CONTINUITY BRIEF HERE`;/);
-  assert.match(readme, /Do not claim access to Reflection Entries that are not included below\./);
-  assert.match(readme, /The AI receives only that copied brief, not the whole wallet/);
-  assert.match(readme, /\*\*Continuity Brief\*\*/);
+test("README includes the AI and care tool integration snippet", () => {
+  assert.match(readme, /## AI And Care Tool Integration/);
+  assert.match(readme, /const carePacket = `PASTE COPIED CARE PASSPORT CARE PACKET HERE`;/);
+  assert.match(readme, /selected context packet for AI agents and raw selected data for therapists/);
+  assert.match(readme, /AI agents receive only the selected context packet; therapists receive the raw selected data export\./);
+  assert.doesNotMatch(readme, /Continuity Brief/);
 });
 
 test("README explains the Arkiv model and Care Passport privacy boundaries", () => {
   assert.match(readme, /PROJECT_ATTRIBUTE = \{/);
   assert.match(readme, /value: "arkiv-agent-notes-ethns-2026"/);
-  assert.match(readme, /Queries use Arkiv protocol owner filtering plus the public `owner` attribute\./);
-  assert.match(readme, /UI label: \*\*Diary Space\*\*/);
-  assert.match(readme, /UI label: \*\*Reflection Entry\*\*/);
-  assert.match(readme, /UI label: \*\*Access Grant\*\*/);
-  assert.match(readme, /UI label: \*\*Reflection Relationship\*\*/);
+  assert.match(readme, /UI label: `Diary Space`/);
+  assert.match(readme, /UI label: `Reflection Entry`/);
+  assert.match(readme, /UI label: `Access Grant`/);
+  assert.match(readme, /UI label: `Reflection Relationship`/);
 
   for (const schemaTerm of ["`vault`", "`encrypted_note`", "`access_grant`", "`memory_link`"]) {
     assert.match(readme, new RegExp(schemaTerm));
@@ -103,13 +96,13 @@ test("README explains the Arkiv model and Care Passport privacy boundaries", () 
   assert.match(readme, /Passphrase: decrypts the encrypted payload locally in the browser\./);
   assert.match(readme, /Diary Space title and description/);
   assert.match(readme, /Reflection Entry body/);
-  assert.match(readme, /Access Grant purpose and selected Reflection Entry keys/);
+  assert.match(readme, /Access Grant purpose and selected reflection entry keys/);
   assert.match(readme, /Optional relationship note/);
   assert.match(readme, /Do not put secrets in Arkiv attributes\./);
 });
 
 test("README names known MVP limitations", () => {
-  assert.match(readme, /No AI API or care provider integration is bundled; the app exports a Continuity Brief for external tools\./);
+  assert.match(readme, /No AI API or care provider integration is bundled; the app exports selected packets for AI agents and raw selected data for therapists\./);
   assert.match(readme, /No local sample mode is shipped in the production app path\./);
   assert.match(readme, /The local rehearsal route is only for outage testing; rehearsal is local\/no Braga and does not create Arkiv entities or real Braga proof\./);
   assert.doesNotMatch(readme, /Demo preview uses local fixture data/);

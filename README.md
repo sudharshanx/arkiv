@@ -1,10 +1,8 @@
 # Care Passport
 
-**AI + Privacy hybrid for private care continuity.**
+Care Passport helps people keep private care notes, see who has access, and share only what they choose.
 
-Care Passport helps people change therapists without starting over by preparing a wallet-owned, therapist-ready care packet they control.
-
-Product promise: user-controlled care context that is owned by the wallet, decrypted locally, verified before use, and shared only through an explicit Access Grant.
+Product promise: `Care Passport keeps private care notes encrypted locally, stored on Arkiv, reviewed before sharing, and revocable at any time.`
 
 Submission status:
 
@@ -15,64 +13,93 @@ Submission status:
 - License: MIT
 - Team: Sudharshan; add additional team members before submission if needed.
 
-Challenge deadline:
+## Demo Walkthrough
 
-- Submit by May 25, 2026 at 23:59 UTC.
-- Late submissions are not accepted; the submission form timestamp is the official record.
+Use this exact flow in the launch demo:
 
-## One-line pitch
+`Connect wallet -> Create a private reflection -> Review selected notes -> Choose audience -> Share -> Copy care packet -> Revoke access`
 
-Care Passport is the consent layer for care continuity: encrypted Reflection Entries users own, verify, review, and allow into a therapist-ready packet only when they choose.
+1. Open `/app`.
+2. Connect the wallet.
+3. Create a private reflection.
+4. Review selected notes.
+5. Choose audience: AI agent context or therapist raw data.
+6. Show who has access.
+7. Create access grant with recipient wallet, notes, and duration.
+8. Copy care packet.
+9. Open `Proof details` only if proof is needed.
+10. Revoke access.
 
-## Judge walkthrough
+Suggested 2-3 minute structure:
 
-1. Open the homepage and explain the hook: **Change therapists without starting over.**
-2. Open `/app` and point to the user loop: **Choose -> Review -> Share -> Expire** across the Write, Grant, and Workbench tabs.
-3. Write a wallet-owned Reflection Entry by connecting MetaMask on Braga, saving the local key, creating a Diary Space, and saving one encrypted entry.
-4. Review the Access Grant by selecting readable Reflection Entries, confirming the therapist wallet, purpose, duration, and private/not included boundary.
-5. Copy the Continuity Brief and verified receipt for the AI or care handoff.
+- 0:00-0:20: Problem and product promise.
+- 0:20-0:40: Connect wallet and create the first reflection.
+- 0:40-1:20: Review selected notes and show who has access.
+- 1:20-2:00: Create access grant and copy care packet.
+- 2:00-2:30: Open proof details and revoke access.
 
-Suggested 2-3 minute video structure:
+## What Care Passport Is
 
-- 0:00-0:20: Problem and product pitch.
-- 0:20-0:45: Product loop: Choose -> Review -> Share -> Expire.
-- 0:45-1:35: Write: MetaMask ownership, local encryption key, Diary Space, and encrypted Reflection Entry write.
-- 1:35-2:10: Grant: selected entries, Access Grant review, recipient wallet, expiry, revocation state, and Braga Explorer links.
-- 2:10-2:45: Workbench: therapist-ready packet, private/not included boundary, Continuity Brief, and copied verified receipt.
+- A wallet-owned encrypted diary that stays with the user.
+- A private memory surface for personal use, AI-agent-assisted review, and direct therapist sharing.
+- A proof-first Arkiv app with encrypted writes and readable receipts.
 
-## Challenge fit
+## What It Is Not
 
-Theme: **AI + Privacy hybrid**
+- Not a chatbot.
+- Not a medical record system.
+- Not a generic note-taking app.
+- Not a hidden protocol demo.
 
-- AI: selected Reflection Entries become a Continuity Brief for ChatGPT, Claude, coding agents, or any future care assistant.
-- Privacy: Diary Space details, Reflection Entry content, private tags, and Access Grant notes are encrypted before storage.
-- Arkiv-native: Care Passport uses separate entity types, queryable attributes, entity relationships, wallet-owned writes, and differentiated expirations.
+## Core UX Contract
 
-The published rubric weights are:
+The interface should answer these questions in order:
 
-- Arkiv integration depth: 40%
-- Functionality: 30%
-- Design & UX: 20%
-- Code quality & docs: 10%
+1. Am I connected?
+2. What private notes do I have?
+3. What use case am I serving?
+4. Who can access them?
+5. What am I sharing right now?
+6. How do I stop access?
 
-## Judge checklist
+## Product Screens
 
-- Unique `PROJECT_ATTRIBUTE` on every entity and every query.
-- Queries use Arkiv protocol owner filtering plus the public `owner` attribute.
-- Four entity types: `vault`, `encrypted_note`, `access_grant`, `memory_link`.
-- Connected to Arkiv Braga testnet.
-- Wallet-gated writes.
-- Encrypted payloads with browser Web Crypto.
-- Public attributes kept coarse and non-sensitive.
-- Explicit Access Grant review before Continuity Brief export.
-- Private-locked Reflection Entries stay out of the packet by default.
-- No traditional database.
-- The production app path uses wallet-owned records, not local sample data.
-- Rehearsal is local/no Braga and must not be presented as live proof.
+### Home
 
-## Arkiv data model
+- Brand: `Care Passport`
+- Main actions: `Create reflection`, `Share access`
+- Copy should explain the product without protocol jargon.
+- Use cases should be visible: encrypted diaries, AI-agent context sharing, and therapist raw-data sharing.
 
-Every entity and every query uses:
+### Create Reflection
+
+- Title: `Create a private reflection`
+- Main action: `Save encrypted reflection`
+- Secondary action: `Review access`
+
+### Share Access
+
+- Title: `Choose who can see this.`
+- Main action: `Create access grant`
+- Secondary action: `Review dashboard`
+- Final audience choice:
+  - `AI agent context`
+  - `Therapist raw data`
+
+### Dashboard
+
+- Title: `Access dashboard`
+- Must show selected notes, who has access, the care packet preview, and proof details.
+- Primary export action: `Copy care packet`
+
+### Proof Details
+
+- Collapsed by default.
+- Shows wallet, project scope, entity keys, transaction links, and encryption boundary.
+
+## Arkiv Data Model
+
+Every entity and query uses:
 
 ```ts
 PROJECT_ATTRIBUTE = {
@@ -83,9 +110,7 @@ PROJECT_ATTRIBUTE = {
 
 ### `vault`
 
-UI label: **Diary Space**
-
-Attributes:
+UI label: `Diary Space`
 
 - `project = arkiv-agent-notes-ethns-2026`
 - `entityType = vault`
@@ -97,7 +122,7 @@ Attributes:
 
 Payload:
 
-- AES-GCM encrypted JSON containing Diary Space title and description.
+- AES-GCM encrypted JSON containing the Diary Space title and description.
 
 Expiration:
 
@@ -105,9 +130,7 @@ Expiration:
 
 ### `encrypted_note`
 
-UI label: **Reflection Entry**
-
-Attributes:
+UI label: `Reflection Entry`
 
 - `project = arkiv-agent-notes-ethns-2026`
 - `entityType = encrypted_note`
@@ -121,7 +144,7 @@ Attributes:
 
 Payload:
 
-- AES-GCM encrypted JSON containing Reflection Entry title, body, private tags, care fields, and private-lock state.
+- AES-GCM encrypted JSON containing the reflection title, body, private tags, care fields, and private-lock state.
 
 Expiration:
 
@@ -129,9 +152,7 @@ Expiration:
 
 ### `access_grant`
 
-UI label: **Access Grant**
-
-Attributes:
+UI label: `Access Grant`
 
 - `project = arkiv-agent-notes-ethns-2026`
 - `entityType = access_grant`
@@ -146,7 +167,7 @@ Attributes:
 
 Payload:
 
-- AES-GCM encrypted JSON containing the grant purpose and selected Reflection Entry keys.
+- AES-GCM encrypted JSON containing the grant purpose and selected reflection entry keys.
 
 Expiration:
 
@@ -154,9 +175,7 @@ Expiration:
 
 ### `memory_link`
 
-UI label: **Reflection Relationship**
-
-Attributes:
+UI label: `Reflection Relationship`
 
 - `project = arkiv-agent-notes-ethns-2026`
 - `entityType = memory_link`
@@ -176,7 +195,7 @@ Expiration:
 
 - 30 days on Braga.
 
-## Privacy model
+## Privacy Model
 
 Arkiv is public. This app encrypts payload content only.
 
@@ -191,7 +210,7 @@ Encrypted:
 - Reflection Entry title
 - Reflection Entry body
 - Private tags
-- Access Grant purpose and selected Reflection Entry keys
+- Access Grant purpose and selected reflection entry keys
 - Optional relationship note
 
 Public query attributes:
@@ -206,7 +225,7 @@ Public query attributes:
 
 Do not put secrets in Arkiv attributes. Attributes are intentionally visible so Arkiv can query them.
 
-## Local development
+## Setup
 
 Requirements:
 
@@ -230,49 +249,35 @@ npm run build
 npm run verify:local
 ```
 
-Live Braga testing:
-
-- Use `/app` for the current wallet-owned proof path.
-- Confirm MetaMask is connected to Arkiv Braga Testnet and the wallet has Braga GLM from the faucet.
-- Write -> Grant -> Workbench: save local key -> create Diary Space -> save encrypted Reflection Entry -> verify read-back -> review Access Grant -> copy Continuity Brief -> inspect verified receipt.
-- Confirm the Diary Space, Reflection Entry, and Access Grant receipts include entity keys and Braga Explorer transaction links.
-- `npm run verify:local` remains the no-wallet rehearsal check for outages; it opens `/app?rehearsal=1` and must not be treated as real Braga proof.
-
 Routes:
 
 - `/` homepage
-- `/app` live Braga Diary Space and default testing route.
-- `/app?rehearsal=1` local rehearsal path for Braga outages. It uses a synthetic wallet, local Arkiv-shaped records, and synthetic transaction IDs so the Choose -> Review -> Share -> Expire flow can be checked without MetaMask, Braga RPC, or Explorer links. Rehearsal is local/no Braga.
+- `/app` live Braga app
+- `/app?rehearsal=1` local rehearsal path for Braga outages
 
-## How AI and care tools integrate
+## AI And Care Tool Integration
 
-Care Passport does not require an AI API. It produces a Continuity Brief that any AI or care tool can consume.
+Care Passport does not require an AI API. It produces two export shapes: a selected context packet for AI agents and raw selected data for therapists.
 
 Example agent-side flow:
 
 ```ts
-const continuityBrief = `PASTE COPIED CARE PASSPORT CONTINUITY BRIEF HERE`;
+const carePacket = `PASTE COPIED CARE PASSPORT CARE PACKET HERE`;
 
 const systemMessage = `
-Use the selected Care Passport Continuity Brief as user-provided context.
+Use the selected Care Passport context packet as user-provided context.
 Treat it as private session context only.
 Do not claim access to Reflection Entries that are not included below.
 
-${continuityBrief}
+${carePacket}
 `;
 ```
 
-In the live app, the user chooses which decrypted Reflection Entries to include in the Access Grant, then copies the **Continuity Brief**. The AI receives only that copied brief, not the whole wallet, not raw Arkiv ciphertext, and not unselected entries.
+The user chooses which decrypted Reflection Entries to include in the access grant, then picks the audience at the end. AI agents receive only the selected context packet; therapists receive the raw selected data export. Neither gets the whole wallet, raw Arkiv ciphertext, or unselected entries.
 
-Braga links:
+## Known Limitations
 
-- Faucet: https://braga.hoodi.arkiv.network/faucet/
-- Explorer: https://explorer.braga.hoodi.arkiv.network/
-- RPC: https://braga.hoodi.arkiv.network/rpc
-
-## Known limitations
-
-- No AI API or care provider integration is bundled; the app exports a Continuity Brief for external tools.
+- No AI API or care provider integration is bundled; the app exports selected packets for AI agents and raw selected data for therapists.
 - No local sample mode is shipped in the production app path.
 - The local rehearsal route is only for outage testing; rehearsal is local/no Braga and does not create Arkiv entities or real Braga proof.
 - Passphrase recovery is not implemented.

@@ -31,7 +31,7 @@ Latest non-wallet infrastructure check:
 - Screenshot evidence shows:
   - connected wallet `0x05b5...4430`,
   - one readable wallet-owned memory selected,
-  - Proof Center status rows complete for wallet, local key, Memory Space, saved Memory, and load/unlock,
+  - Proof details status rows complete for wallet, local key, Memory Space, saved Memory, and load/unlock,
   - Proof receipt status `Verified read check`,
   - Memory Space entity and Memory entity visible,
   - Memory Space transaction and Memory transaction rows each linking to Braga Explorer,
@@ -51,7 +51,7 @@ Latest non-wallet infrastructure check:
 - [x] Save an encrypted Memory on Arkiv.
 - [x] Confirm the app shows a Braga Explorer link after wallet approval.
 - [x] Run `Load and unlock`.
-- [x] Confirm Proof Center shows wallet, project scope, Memory Space entity, Memory entity, encrypted payload, Memory Space transaction, and Memory transaction.
+- [x] Confirm Proof details shows wallet, project scope, Memory Space entity, Memory entity, encrypted payload, Memory Space transaction, and Memory transaction.
 - [x] Select the readable memory.
 - [x] Copy agent context and verify it contains only selected memories.
 - [x] Copy proof and record the copied text or screenshots for judging.

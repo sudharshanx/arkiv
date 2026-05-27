@@ -11,7 +11,6 @@ import {
   Plus,
   RefreshCw,
   ShieldCheck,
-  Wallet,
   XCircle,
 } from "lucide-react";
 import "./styles.css";
@@ -74,7 +73,7 @@ const reflectionTypeLabels: Record<CareReflectionType, string> = {
 const reflectionTypeOptions = Object.keys(reflectionTypeLabels) as CareReflectionType[];
 
 const initialDraft: DraftNote = {
-  title: "Starting with a new therapist",
+  title: "Starting with a new care context",
   body:
     "I want the first session to start with context about the move, the breakup, sleep disruption, and what has helped before. I do not want to repeat every detail from the beginning.",
   tags: "transition, sleep, trust",
@@ -252,6 +251,73 @@ function TextField({
   );
 }
 
+function MetaMaskMark() {
+  return (
+    <svg aria-hidden="true" className="care-metamask-mark" viewBox="0 0 32 32">
+      <path
+        d="M5 6.5 16 2l11 4.5-1.8 9.2-4.8 7.9-4.4 5.9-4.4-5.9-4.8-7.9L5 6.5Z"
+        fill="#E2761B"
+      />
+      <path d="m10.2 10.1 5.8-3.5 5.8 3.5-1 7.1-4.8 5.8-4.8-5.8-1-7.1Z" fill="#F6851B" />
+      <path d="m9.4 11 6.6-3.8 6.6 3.8-1.3 5.6-5.3 6.2-5.3-6.2L9.4 11Z" fill="#C06413" />
+      <path d="m13.1 12.3 2.9-1.8 2.9 1.8-.5 3.2-2.4 2.8-2.4-2.8-.5-3.2Z" fill="#FFF1E2" />
+    </svg>
+  );
+}
+
+function AppNav({
+  className,
+  navigate,
+  view,
+}: {
+  className?: string;
+  navigate: (view: View) => void;
+  view: View;
+}) {
+  const items: Array<{ icon: ReactNode; label: string; target: View }> = [
+    { icon: <Plus size={15} />, label: "Write new", target: "write" },
+    { icon: <ShieldCheck size={15} />, label: "Grant memory", target: "grant" },
+    { icon: <FileText size={15} />, label: "Dashboard", target: "workbench" },
+  ];
+
+  return (
+    <nav className={classNames("care-nav", className)} aria-label="Care Passport primary navigation">
+      {items.map((item) => (
+        <button
+          aria-current={view === item.target ? "page" : undefined}
+          className={classNames(view === item.target && "active")}
+          key={item.target}
+          onClick={() => navigate(item.target)}
+          type="button"
+        >
+          {item.icon}
+          <span>{item.label}</span>
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+function timeWindowLabel(days: string): string {
+  const parsed = Number(days) || 14;
+  return `last ${parsed} day${parsed === 1 ? "" : "s"}`;
+}
+
+function isWithinWindow(createdAt: number, days: string): boolean {
+  const parsed = Number(days) || 14;
+  return createdAt >= Date.now() - parsed * 24 * 60 * 60 * 1000;
+}
+
+function grantAudienceLabel(scope: GrantScope): string {
+  return scope === "selected_packet" ? "AI agent context" : "Therapist raw data";
+}
+
+function grantAudienceDescription(scope: GrantScope): string {
+  return scope === "selected_packet"
+    ? "Selected reflections become a narrow context packet for an AI agent used by a therapist."
+    : "Selected reflections are shared as raw data for a therapist to review directly.";
+}
+
 function HomePage() {
   return (
     <main className="care-home">
@@ -260,25 +326,20 @@ function HomePage() {
           <span className="care-brand-mark">CP</span>
           <span>Care Passport</span>
         </a>
-        <nav className="care-nav" aria-label="Product navigation">
-          <a href="/">Home</a>
-          <a href={viewHref("write", false)}>Create reflection</a>
-          <a href={viewHref("grant", false)}>Share access</a>
-          <a href={viewHref("workbench", false)}>Dashboard</a>
-        </nav>
+        <div className="care-bar-copy">One dashboard. One share flow.</div>
       </header>
 
       <section className="care-hero">
         <div className="care-hero-copy">
           <p className="care-label">Private memory for care continuity</p>
-          <h1>A diary you own. A share list you control.</h1>
+          <h1>Write privately. Share selectively.</h1>
           <p className="care-lead">
-            Keep encrypted care notes in one place. See who has access, choose what to share, and revoke it when you
-            need to.
+            Write diaries encrypted forever. Take them with you. Share only the parts you choose, without walled
+            gardens.
           </p>
           <p className="care-lead">
-            Care Passport is a private, wallet-owned care system. It is not a chatbot and not a medical record
-            system.
+            Care Passport is a private, wallet-owned care system for personal diaries, AI-agent-assisted review, and
+            direct therapist sharing.
           </p>
           <div className="care-actions">
             <a className="care-btn primary" href={viewHref("write", false)}>
@@ -319,7 +380,7 @@ function HomePage() {
               <div className="care-grant-preview">
                 <span>Who has access</span>
                 <h3>14-day access</h3>
-                <p>Give one therapist time-bound access. It ends automatically unless you renew it.</p>
+                <p>Give one recipient time-bound access as AI-agent context or raw therapist data. It ends automatically unless you renew it.</p>
                 <strong>Revoke anytime</strong>
               </div>
               <div className="care-grant-preview">
@@ -338,12 +399,42 @@ function HomePage() {
       <section className="care-section">
         <div className="care-section-head">
           <div>
-            <p className="care-label">Core flow</p>
-            <h2>Connect. Create. Review. Share. Revoke.</h2>
+            <p className="care-label">Use cases</p>
+            <h2>Built for private diaries, AI agents, and therapists.</h2>
           </div>
           <p>
-            The user owns the diary entries, encrypts them locally, and controls who can see them, for how long, and
-            for what purpose.
+            The product stays centered on encrypted ownership. Sharing is optional and always happens on the user's
+            terms.
+          </p>
+        </div>
+        <div className="care-flow-steps">
+          <article>
+            <span>Diary</span>
+            <h3>Encrypted forever</h3>
+            <p>Write private diaries, keep them encrypted, and take them with you instead of living inside a walled garden.</p>
+          </article>
+          <article>
+            <span>AI agents</span>
+            <h3>Selected context</h3>
+            <p>Share a narrow context packet with AI agents used by therapists when they need structured background.</p>
+          </article>
+          <article>
+            <span>Therapists</span>
+            <h3>Raw selected data</h3>
+            <p>Export raw selected notes for therapists when they need to read the original language directly.</p>
+          </article>
+        </div>
+      </section>
+
+      <section className="care-section">
+        <div className="care-section-head">
+          <div>
+            <p className="care-label">Core flow</p>
+            <h2>Connect. Create. Review. Choose audience. Share. Revoke.</h2>
+          </div>
+          <p>
+            The user owns the diary entries, encrypts them locally, reviews what is selected, chooses the final
+            audience, and controls who can see them, for how long, and for what purpose.
           </p>
         </div>
         <div className="care-flow-grid">
@@ -358,9 +449,14 @@ function HomePage() {
             <p>Write a private reflection and encrypt it locally before it becomes an Arkiv record.</p>
           </article>
           <article>
+            <span>Choose audience</span>
+            <h3>AI agent or therapist</h3>
+            <p>Pick the final share target at the end of the flow: AI-agent context or therapist raw data.</p>
+          </article>
+          <article>
             <span>Share</span>
             <h3>Time-bound access</h3>
-            <p>Choose the therapist wallet, the notes, and the duration before creating access.</p>
+            <p>Choose the recipient wallet, the notes, and the duration before creating access.</p>
           </article>
         </div>
       </section>
@@ -380,6 +476,7 @@ function CareApp() {
   const [passphrase, setPassphrase] = useState("");
   const [confirmedKey, setConfirmedKey] = useState(false);
   const [vaults, setVaults] = useState<VaultRecord[]>([]);
+  const [demoData, setDemoData] = useState<{ grant: AccessGrantRecord; notes: NoteRecord[]; vault: VaultRecord } | null>(null);
   const [activeVaultKey, setActiveVaultKey] = useState("");
   const [notes, setNotes] = useState<NoteRecord[]>([]);
   const [links, setLinks] = useState<LinkRecord[]>([]);
@@ -388,7 +485,7 @@ function CareApp() {
   const [draft, setDraft] = useState<DraftNote>(initialDraft);
   const [grantWallet, setGrantWallet] = useState(DEFAULT_THERAPIST_WALLET);
   const [grantPurpose, setGrantPurpose] = useState(
-    "Continuity for intake sessions after changing therapists. Use only for understanding history, current goals, and support preferences.",
+    "Share the current time window for intake sessions, AI-agent review, and direct therapist reading. Use only for understanding history, current goals, and support preferences.",
   );
   const [grantScope, setGrantScope] = useState<GrantScope>("selected_packet");
   const [grantDays, setGrantDays] = useState("14");
@@ -399,6 +496,8 @@ function CareApp() {
   const [notice, setNotice] = useState("");
   const [toast, setToast] = useState<Toast | null>(null);
   const [showProof, setShowProof] = useState(false);
+  const [activeMemoryKey, setActiveMemoryKey] = useState("");
+  const [lastSavedMemoryKey, setLastSavedMemoryKey] = useState("");
   const [spaceFeedback, setSpaceFeedback] = useState<Feedback>(EMPTY_FEEDBACK);
   const [entryFeedback, setEntryFeedback] = useState<Feedback>(EMPTY_FEEDBACK);
   const [grantFeedback, setGrantFeedback] = useState<Feedback>(EMPTY_FEEDBACK);
@@ -407,16 +506,18 @@ function CareApp() {
   const walletVaults = walletOwner ? vaults.filter((vault) => normalizeAddress(vault.owner) === walletOwner) : [];
   const activeVault = walletVaults.find((vault) => vault.entityKey === activeVaultKey) ?? walletVaults[0];
   const activeVaultNotes = notes.filter((note) => note.vaultKey === activeVault?.entityKey && note.status === "active");
-  const activeGrant = grants.find((grant) => grantStatus(grant) === "active");
-  const readableNotes = activeVaultNotes.filter((note) => note.decrypted);
+  const hasLiveRecords = Boolean(activeVaultNotes.length || grants.length);
+  const usingDemoData = !hasLiveRecords;
+  const displayNotes = hasLiveRecords ? activeVaultNotes : demoData?.notes ?? [];
+  const displayGrants = hasLiveRecords ? grants : demoData?.grant ? [demoData.grant] : [];
+  const displayVault = activeVault ?? demoData?.vault;
+  const activeGrant = displayGrants.find((grant) => grantStatus(grant) === "active");
+  const historyNotes = useMemo(() => [...displayNotes].sort((a, b) => b.createdAt - a.createdAt), [displayNotes]);
+  const readableNotes = displayNotes.filter((note) => note.decrypted);
   const eligibleNotes = readableNotes.filter((note) => !note.decrypted?.privateLocked);
-  const selectedNotes = eligibleNotes.filter((note) => selectedKeys.has(note.entityKey));
-  const privateLockedCount = readableNotes.filter((note) => note.decrypted?.privateLocked).length;
-  const selectedGrantKeys = selectedNotes.map((note) => note.entityKey);
-
-  const filteredNotes = useMemo(() => {
+  const visibleHistoryNotes = useMemo(() => {
     const term = query.trim().toLowerCase();
-    return activeVaultNotes.filter((note) => {
+    return historyNotes.filter((note) => {
       const secret = note.decrypted;
       const haystack = [
         secret?.title,
@@ -434,20 +535,36 @@ function CareApp() {
       const matchesType = filter === "all" || (secret?.memoryType ?? note.contentClass) === filter;
       return matchesText && matchesType;
     });
-  }, [activeVaultNotes, filter, query]);
-
-  const packet = useMemo(() => buildContinuityPacket(selectedNotes, activeGrant, rehearsal), [selectedNotes, activeGrant, rehearsal]);
+  }, [filter, historyNotes, query]);
+  const activeHistoryNote = visibleHistoryNotes.find((note) => note.entityKey === activeMemoryKey) ?? visibleHistoryNotes[0] ?? historyNotes[0];
+  const shareWindowNotes = useMemo(
+    () => eligibleNotes.filter((note) => isWithinWindow(note.createdAt, grantDays)),
+    [eligibleNotes, grantDays],
+  );
+  const privateLockedCount = readableNotes.filter((note) => note.decrypted?.privateLocked).length;
+  const packet = useMemo(() => buildContinuityPacket(shareWindowNotes, activeGrant, rehearsal), [shareWindowNotes, activeGrant, rehearsal]);
   const proofReceipt = useMemo(
     () => buildProofReceipt({
       activeGrant,
-      activeVault,
-      grants,
-      notes: selectedNotes,
+      activeVault: displayVault,
+      grants: displayGrants,
+      notes: shareWindowNotes,
       rehearsal,
       wallet,
+      shareWindowDays: grantDays,
     }),
-    [activeGrant, activeVault, grants, rehearsal, selectedNotes, wallet],
+    [activeGrant, displayVault, displayGrants, grantDays, rehearsal, shareWindowNotes, wallet],
   );
+
+  useEffect(() => {
+    let cancelled = false;
+    makeRehearsalData().then((seeded) => {
+      if (!cancelled) setDemoData(seeded);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!rehearsal) return;
@@ -501,6 +618,13 @@ function CareApp() {
     const timeout = window.setTimeout(() => setToast(null), 3200);
     return () => window.clearTimeout(timeout);
   }, [toast]);
+
+  useEffect(() => {
+    if (!historyNotes.length) return;
+    if (!activeMemoryKey || !historyNotes.some((note) => note.entityKey === activeMemoryKey)) {
+      setActiveMemoryKey(historyNotes[0].entityKey);
+    }
+  }, [activeMemoryKey, historyNotes]);
 
   function navigate(nextView: View) {
     setUrlView(nextView, rehearsal);
@@ -698,15 +822,16 @@ function CareApp() {
         };
         setNotes((current) => [note, ...current.filter((item) => item.entityKey !== note.entityKey)]);
         if (!secret.privateLocked) setSelectedKeys((current) => new Set(current).add(note.entityKey));
+        setActiveMemoryKey(note.entityKey);
+        setLastSavedMemoryKey(note.entityKey);
         setEntryFeedback({
           entityKey: note.entityKey,
-          message: "Reflection saved in local rehearsal. No Arkiv transaction was sent.",
+          message: "Memory saved. No Arkiv transaction was sent.",
           phase: "complete",
           txHash: rehearsalTxHash(now),
         });
-        setNotice("Encrypted reflection is ready for consent review.");
-        showToast("Reflection saved. Private content stayed encrypted locally.");
-        navigate("workbench");
+        setNotice("Memory saved. Grant it to a therapist when you're ready.");
+        showToast("Memory saved. Private content stayed encrypted locally.");
         return;
       }
 
@@ -733,15 +858,16 @@ function CareApp() {
       };
       setNotes((current) => [note, ...current.filter((item) => item.entityKey !== note.entityKey)]);
       if (!secret.privateLocked) setSelectedKeys((current) => new Set(current).add(note.entityKey));
+      setActiveMemoryKey(note.entityKey);
+      setLastSavedMemoryKey(note.entityKey);
       setEntryFeedback({
         entityKey: result.entityKey,
-        message: "Reflection confirmed on Braga and decrypted in this browser.",
+        message: "Memory saved and confirmed on Braga.",
         phase: "complete",
         txHash: result.txHash,
       });
-      setNotice("Encrypted reflection is ready for consent review.");
-      showToast("Reflection saved. Private content stayed encrypted locally.");
-      navigate("workbench");
+      setNotice("Memory saved. Grant it to a therapist when you're ready.");
+      showToast("Memory saved. Private content stayed encrypted locally.");
     } catch (saveError) {
       const message = saveError instanceof Error ? saveError.message : "Could not save reflection.";
       setEntryFeedback({ message, phase: "error", txHash: transactionHashFromMessage(message) });
@@ -760,8 +886,8 @@ function CareApp() {
       if (!wallet) throw new Error("Connect a wallet before creating a grant.");
       if (!activeVault) throw new Error("Create or load a diary space before creating a grant.");
       if (!passphrase.trim()) throw new Error("Enter the local key before preparing an access grant.");
-      const included = grantScope === "temporary_full_view" ? eligibleNotes.map((note) => note.entityKey) : selectedGrantKeys;
-      if (!included.length) throw new Error("Select at least one readable, non-private-locked reflection before granting access.");
+      const included = shareWindowNotes.map((note) => note.entityKey);
+      if (!included.length) throw new Error("Choose a time window that includes at least one readable memory before granting access.");
       if (!grantWallet.trim()) throw new Error("Enter the therapist wallet identity.");
 
       const expiresAt = daysFromNow(Number(grantDays) || 14);
@@ -849,21 +975,34 @@ function CareApp() {
     });
   }
 
-  function selectVisible() {
-    setSelectedKeys((current) => {
-      const next = new Set(current);
-      filteredNotes.forEach((note) => {
-        if (note.decrypted && !note.decrypted.privateLocked) next.add(note.entityKey);
-      });
-      return next;
-    });
-  }
-
   async function revokeGrant(grantKey: string) {
     setError("");
     setBusy("revoke");
 
     try {
+      const demoGrant = demoData?.grant.entityKey === grantKey ? demoData.grant : undefined;
+      if (demoGrant && !grants.some((item) => item.entityKey === grantKey)) {
+        setDemoData((current) =>
+          current
+            ? {
+                ...current,
+                grant: {
+                  ...current.grant,
+                  status: "revoked",
+                },
+              }
+            : current,
+        );
+        setGrantFeedback({
+          entityKey: grantKey,
+          message: "Demo access revoked. No Arkiv transaction was sent.",
+          phase: "complete",
+          txHash: rehearsalTxHash(Date.now()),
+        });
+        showToast("Demo access revoked.");
+        return;
+      }
+
       if (!wallet) throw new Error("Connect a wallet before revoking a grant.");
       const grant = grants.find((item) => item.entityKey === grantKey);
       if (!grant) throw new Error("Access grant was not found in this session.");
@@ -965,22 +1104,15 @@ function CareApp() {
           <span className="care-brand-mark">CP</span>
           <span>Care Passport</span>
         </a>
-        <nav className="care-nav" aria-label="App navigation">
-          <button className={view === "write" ? "active" : ""} onClick={() => navigate("write")} type="button">
-            Create reflection
-          </button>
-          <button className={view === "grant" ? "active" : ""} onClick={() => navigate("grant")} type="button">
-            Share access
-          </button>
-          <button className={view === "workbench" ? "active" : ""} onClick={() => navigate("workbench")} type="button">
-            Dashboard
-          </button>
-        </nav>
-        <div className="care-wallet-actions">
-          {wallet ? <span className="care-wallet">{rehearsal ? "Local wallet" : shortAddress(wallet)}</span> : null}
-          <ActionButton icon={<Wallet size={15} />} onClick={handleConnect}>
-            {wallet ? "Wallet active" : rehearsal ? "Use local wallet" : "Connect wallet"}
-          </ActionButton>
+        <AppNav navigate={navigate} view={view} />
+        <div className="care-bar-actions">
+          {wallet ? (
+            <span className="care-wallet">{rehearsal ? "Local wallet" : shortAddress(wallet)}</span>
+          ) : (
+            <ActionButton className="primary highlight" icon={<MetaMaskMark />} onClick={handleConnect}>
+              Connect MetaMask
+            </ActionButton>
+          )}
         </div>
       </header>
 
@@ -991,109 +1123,110 @@ function CareApp() {
         </div>
       )}
 
-      <section className="care-status-line">
-        <span>
-          <strong>Care Passport.</strong> Encrypted reflections, wallet-owned Arkiv records, and time-bound therapist
-          access.
-        </span>
-        <div className="care-status-actions">
-          <StatusDot tone={wallet ? "success" : "warn"}>{wallet ? "Wallet ready" : "Wallet needed"}</StatusDot>
-          {!wallet && (
-            <ActionButton className="primary" icon={<Wallet size={14} />} onClick={handleConnect}>
-              Connect wallet
-            </ActionButton>
+      <div className="care-shell">
+        <div className="care-shell-main">
+          <section className="care-status-line">
+            <span>
+              <strong>Care Passport.</strong> Encrypted reflections, wallet-owned Arkiv records, and time-bound therapist
+              access.
+            </span>
+          </section>
+
+          {error && (
+            <div className="care-alert danger" role="alert">
+              <XCircle size={18} />
+              <span>{error}</span>
+            </div>
           )}
+          {notice && (
+            <div className="care-alert" role="status">
+              <CheckCircle2 size={18} />
+              <span>{notice}</span>
+            </div>
+          )}
+
+          {view === "write" &&
+            renderWriteView({
+              busy,
+              confirmedKey,
+              draft,
+              entryFeedback,
+              handleCopyKey,
+              handleSaveReflection,
+              navigate,
+              passphrase,
+              renderFeedback,
+              rehearsal,
+              setConfirmedKey,
+              setDraft,
+              setPassphrase,
+              wallet,
+              lastSavedMemoryKey,
+              notes: historyNotes,
+            })}
+
+          {view === "grant" &&
+            renderGrantView({
+              activeVault: displayVault,
+              busy,
+              grantDays,
+              grantFeedback,
+              grantPurpose,
+              grantScope,
+              grantWallet,
+              handleCreateGrant,
+              navigate,
+              renderFeedback,
+              rehearsal,
+              setGrantDays,
+              setGrantPurpose,
+              setGrantScope,
+              setGrantWallet,
+              wallet,
+              shareWindowNotes,
+              lastSavedMemoryKey,
+              notes: historyNotes,
+            })}
+
+          {view === "workbench" &&
+            renderWorkbenchView({
+              activeGrant,
+              activeHistoryNote,
+              activeVault: displayVault,
+              busy,
+              filter,
+              grants: displayGrants,
+              handleCopyPacket,
+              handleCopyProof,
+              loadWalletData,
+              packet,
+              privateLockedCount,
+              navigate,
+              query,
+              readableNotes,
+              rehearsal,
+              renderFeedback,
+              revokeGrant,
+              setFilter,
+              setQuery,
+              setShowProof,
+              showProof,
+              spaceFeedback,
+              entryFeedback,
+              grantFeedback,
+              proofReceipt,
+              usingDemoData,
+              wallet,
+              historyNotes,
+              visibleHistoryNotes,
+              activeMemoryKey,
+              setActiveMemoryKey,
+              grantDays,
+              shareWindowNotes,
+              lastSavedMemoryKey,
+            })}
         </div>
-      </section>
-
-      {error && (
-        <div className="care-alert danger" role="alert">
-          <XCircle size={18} />
-          <span>{error}</span>
-        </div>
-      )}
-      {notice && (
-        <div className="care-alert" role="status">
-          <CheckCircle2 size={18} />
-          <span>{notice}</span>
-        </div>
-      )}
-
-      {view === "write" &&
-        renderWriteView({
-          busy,
-          confirmedKey,
-          draft,
-          entryFeedback,
-          handleCopyKey,
-          handleSaveReflection,
-          navigate,
-          passphrase,
-          renderFeedback,
-          setConfirmedKey,
-          setDraft,
-          setPassphrase,
-          wallet,
-        })}
-
-      {view === "grant" &&
-        renderGrantView({
-          activeVault,
-          busy,
-          eligibleNotes,
-          grantDays,
-          grantFeedback,
-          grantPurpose,
-          grantScope,
-          grantWallet,
-          handleCreateGrant,
-          navigate,
-          renderFeedback,
-          selectedGrantKeys,
-          selectedNotes,
-          setGrantDays,
-          setGrantPurpose,
-          setGrantScope,
-          setGrantWallet,
-          setSelectedKeys,
-          toggleSelected,
-          wallet,
-        })}
-
-      {view === "workbench" &&
-        renderWorkbenchView({
-          activeGrant,
-          activeVault,
-          busy,
-          eligibleNotes,
-          filter,
-          filteredNotes,
-          grants,
-          handleCopyPacket,
-          handleCopyProof,
-          loadWalletData,
-          packet,
-          privateLockedCount,
-          query,
-          readableNotes,
-          rehearsal,
-          renderFeedback,
-          revokeGrant,
-          selectVisible,
-          selectedKeys,
-          selectedNotes,
-          setFilter,
-          setQuery,
-          setSelectedKeys,
-          setShowProof,
-          showProof,
-          spaceFeedback,
-          entryFeedback,
-          grantFeedback,
-          proofReceipt,
-          toggleSelected,
-          wallet,
-        })}
+      </div>
 
       {toast && (
         <div className={`care-toast ${toast.tone === "error" ? "error" : ""}`} role="status" aria-live="polite">
@@ -1112,8 +1245,11 @@ function renderWriteView(props: {
   handleCopyKey: () => void;
   handleSaveReflection: (event: FormEvent<HTMLFormElement>) => void;
   navigate: (view: View) => void;
+  lastSavedMemoryKey: string;
+  notes: NoteRecord[];
   passphrase: string;
   renderFeedback: (feedback: Feedback, label: string) => ReactNode;
+  rehearsal: boolean;
   setConfirmedKey: (value: boolean) => void;
   setDraft: (draft: DraftNote) => void;
   setPassphrase: (value: string) => void;
@@ -1127,14 +1263,18 @@ function renderWriteView(props: {
     handleCopyKey,
     handleSaveReflection,
     navigate,
+    lastSavedMemoryKey,
+    notes,
     passphrase,
     renderFeedback,
+    rehearsal,
     setConfirmedKey,
     setDraft,
     setPassphrase,
     wallet,
   } = props;
   const keyReady = Boolean(passphrase.trim() && confirmedKey);
+  const savedNote = notes.find((note) => note.entityKey === lastSavedMemoryKey);
 
   return (
     <section className="care-wrap">
@@ -1147,23 +1287,55 @@ function renderWriteView(props: {
             locally before it becomes a wallet-owned Arkiv record.
           </p>
         </div>
-        <div className="care-panel key-panel">
-          <StatusDot tone={keyReady ? "success" : "warn"}>{keyReady ? "Local key active" : "Local key needed"}</StatusDot>
-          <p>This key is not a wallet password. It encrypts new diary content and decrypts it in this browser session.</p>
-          <div className="care-actions">
-            <ActionButton
-              className="primary"
-              icon={<KeyRound size={16} />}
-              onClick={() => {
-                setPassphrase(REHEARSAL_KEY);
-                setConfirmedKey(true);
-              }}
-            >
-              Generate key
-            </ActionButton>
-            <ActionButton disabled={!passphrase} icon={<Copy size={16} />} onClick={handleCopyKey}>
-              Copy key
-            </ActionButton>
+        <div className="care-panel care-start-card">
+          <div className="care-step">
+            <div>
+              <span>01</span>
+              <h2>Connect wallet</h2>
+              <p>This owns the reflection before anything is saved.</p>
+            </div>
+            <div className="care-step-action">
+              <StatusDot tone={wallet ? "success" : "warn"}>{wallet ? "Wallet ready" : "Wallet needed"}</StatusDot>
+              <span className="care-wallet">{wallet ? (rehearsal ? "Local wallet" : shortAddress(wallet)) : "Use top-right MetaMask"}</span>
+            </div>
+          </div>
+
+          <div className="care-step key-panel">
+            <div>
+              <span>02</span>
+              <h2>Local key</h2>
+              <p>Generate or enter the key that unlocks this browser session.</p>
+            </div>
+            <div className="care-key-stack">
+              <TextField label="Local encryption key">
+                <input
+                  autoComplete="off"
+                  onChange={(event) => setPassphrase(event.target.value)}
+                  placeholder="Generate or enter a key before saving"
+                  value={passphrase}
+                />
+              </TextField>
+              <div className="care-actions">
+                <ActionButton
+                  className="primary"
+                  icon={<KeyRound size={16} />}
+                  onClick={() => {
+                    setPassphrase(REHEARSAL_KEY);
+                    setConfirmedKey(true);
+                  }}
+                >
+                  Generate key
+                </ActionButton>
+                <ActionButton disabled={!passphrase} icon={<Copy size={16} />} onClick={handleCopyKey}>
+                  Copy key
+                </ActionButton>
+              </div>
+              <label className="care-check compact">
+                <input checked={confirmedKey} onChange={(event) => setConfirmedKey(event.target.checked)} type="checkbox" />
+                <span>I saved this key or already know it.</span>
+              </label>
+              <StatusDot tone={keyReady ? "success" : "warn"}>{keyReady ? "Local key active" : "Local key needed"}</StatusDot>
+            </div>
           </div>
         </div>
       </div>
@@ -1171,18 +1343,12 @@ function renderWriteView(props: {
       <div className="care-two-column">
         <form className="care-panel care-stack" onSubmit={handleSaveReflection}>
           <div className="care-panel-head">
-            <h2>Reflection entry</h2>
+            <div>
+              <p className="care-label">Write here</p>
+              <h2>Reflection entry</h2>
+            </div>
             <span>Encrypted diary</span>
           </div>
-
-          <TextField label="Local encryption key">
-            <input
-              autoComplete="off"
-              onChange={(event) => setPassphrase(event.target.value)}
-              placeholder="Generate or enter a key before saving"
-              value={passphrase}
-            />
-          </TextField>
 
           <TextField label="Reflection type">
             <select
@@ -1244,10 +1410,6 @@ function renderWriteView(props: {
             <input checked={Boolean(draft.privateLocked)} onChange={(event) => setDraft({ ...draft, privateLocked: event.target.checked })} type="checkbox" />
             <span>Private-lock this entry so it is excluded from therapist packets by default.</span>
           </label>
-          <label className="care-check">
-            <input checked={confirmedKey} onChange={(event) => setConfirmedKey(event.target.checked)} type="checkbox" />
-            <span>I saved this key or already know it.</span>
-          </label>
 
           <div className="care-actions">
             <button className="care-btn primary" disabled={busy === "entry" || !wallet} type="submit">
@@ -1259,11 +1421,31 @@ function renderWriteView(props: {
             </ActionButton>
           </div>
           {renderFeedback(entryFeedback, "Entry")}
+          {savedNote && (
+            <div className="care-save-cue compact">
+              <div>
+                <StatusDot tone="success">Memory saved</StatusDot>
+                <h3>{safeText(savedNote.decrypted?.title, "Saved memory")}</h3>
+                <p>The entry is encrypted and ready to share.</p>
+              </div>
+              <div className="care-actions">
+                <ActionButton className="primary highlight" icon={<ShieldCheck size={16} />} onClick={() => navigate("grant")}>
+                  Grant memory to therapist
+                </ActionButton>
+                <ActionButton icon={<FileText size={16} />} onClick={() => navigate("workbench")}>
+                  Open dashboard
+                </ActionButton>
+              </div>
+            </div>
+          )}
         </form>
 
-        <aside className="care-panel">
+        <aside className="care-panel care-preview-panel">
           <div className="care-panel-head">
-            <h2>Reflection preview</h2>
+            <div>
+              <p className="care-label">What will be shared</p>
+              <h2>Reflection preview</h2>
+            </div>
             <StatusDot tone={keyReady ? "success" : "danger"}>{keyReady ? "Unlocked" : "Locked"}</StatusDot>
           </div>
           <div className="care-preview">
@@ -1301,7 +1483,6 @@ function renderWriteView(props: {
 function renderGrantView(props: {
   activeVault: VaultRecord | undefined;
   busy: string;
-  eligibleNotes: NoteRecord[];
   grantDays: string;
   grantFeedback: Feedback;
   grantPurpose: string;
@@ -1309,21 +1490,20 @@ function renderGrantView(props: {
   grantWallet: string;
   handleCreateGrant: (event: FormEvent<HTMLFormElement>) => void;
   navigate: (view: View) => void;
+  lastSavedMemoryKey: string;
+  notes: NoteRecord[];
   renderFeedback: (feedback: Feedback, label: string) => ReactNode;
-  selectedGrantKeys: string[];
-  selectedNotes: NoteRecord[];
+  rehearsal: boolean;
   setGrantDays: (value: string) => void;
   setGrantPurpose: (value: string) => void;
   setGrantScope: (value: GrantScope) => void;
   setGrantWallet: (value: string) => void;
-  setSelectedKeys: Dispatch<SetStateAction<Set<string>>>;
-  toggleSelected: (note: NoteRecord) => void;
+  shareWindowNotes: NoteRecord[];
   wallet: string;
 }) {
   const {
     activeVault,
     busy,
-    eligibleNotes,
     grantDays,
     grantFeedback,
     grantPurpose,
@@ -1331,18 +1511,18 @@ function renderGrantView(props: {
     grantWallet,
     handleCreateGrant,
     navigate,
+    lastSavedMemoryKey,
+    notes,
     renderFeedback,
-    selectedGrantKeys,
-    selectedNotes,
+    rehearsal,
     setGrantDays,
     setGrantPurpose,
     setGrantScope,
     setGrantWallet,
-    setSelectedKeys,
-    toggleSelected,
+    shareWindowNotes,
     wallet,
   } = props;
-  const grantIncluded = grantScope === "temporary_full_view" ? eligibleNotes : selectedNotes;
+  const savedNote = notes.find((note) => note.entityKey === lastSavedMemoryKey);
 
   return (
     <section className="care-wrap">
@@ -1354,9 +1534,26 @@ function renderGrantView(props: {
             Choose the therapist wallet, the notes, and the time window before any access is created.
           </p>
         </div>
-        <div className="care-panel">
-          <StatusDot tone="warn">Consent required</StatusDot>
-          <p>Full-view access and selected packets both expire. Revoke remains available after access is active.</p>
+        <div className="care-panel care-start-card">
+          <div className="care-step">
+            <div>
+              <span>01</span>
+              <h2>Connect wallet</h2>
+              <p>Use the owner wallet before creating any access grant.</p>
+            </div>
+            <div className="care-step-action">
+              <StatusDot tone={wallet ? "success" : "warn"}>{wallet ? "Wallet ready" : "Wallet needed"}</StatusDot>
+              <span className="care-wallet">{wallet ? (rehearsal ? "Local wallet" : shortAddress(wallet)) : "Use top-right MetaMask"}</span>
+            </div>
+          </div>
+          <div className="care-step">
+            <div>
+              <span>02</span>
+              <h2>Share by time</h2>
+              <p>Default to the easiest option: share the last 7, 14, or 30 days of memories.</p>
+            </div>
+            <StatusDot tone="warn">Time window</StatusDot>
+          </div>
         </div>
       </div>
 
@@ -1367,7 +1564,18 @@ function renderGrantView(props: {
             <span>Time-bound</span>
           </div>
 
-          <TextField label="Therapist wallet">
+          {savedNote && (
+            <div className="care-save-cue grant">
+              <div>
+                <StatusDot tone="success">Memory saved</StatusDot>
+                <h3>{safeText(savedNote.decrypted?.title, "Saved memory")}</h3>
+                <p>The newest entry is ready. The create grant button below is highlighted for the next step.</p>
+              </div>
+              <small>Grant action highlighted below</small>
+            </div>
+          )}
+
+          <TextField label="Recipient wallet">
             <input onChange={(event) => setGrantWallet(event.target.value)} value={grantWallet} />
           </TextField>
 
@@ -1375,8 +1583,16 @@ function renderGrantView(props: {
             <textarea onChange={(event) => setGrantPurpose(event.target.value)} value={grantPurpose} />
           </TextField>
 
+          <TextField label="Share memories from">
+            <select onChange={(event) => setGrantDays(event.target.value)} value={grantDays}>
+              <option value="7">last 7 days</option>
+              <option value="14">last 14 days</option>
+              <option value="30">last 30 days</option>
+            </select>
+          </TextField>
+
           <div className="care-field">
-            <span>What can they see?</span>
+            <span>Audience</span>
             <div className="care-choice-grid">
               <label className="care-choice">
                 <input
@@ -1385,8 +1601,8 @@ function renderGrantView(props: {
                   onChange={() => setGrantScope("selected_packet")}
                   type="radio"
                 />
-                <span>Selected notes</span>
-                <small>Only chosen reflections enter the care packet.</small>
+                <span>{grantAudienceLabel("selected_packet")}</span>
+                <small>{grantAudienceDescription("selected_packet")}</small>
               </label>
               <label className="care-choice">
                 <input
@@ -1395,58 +1611,47 @@ function renderGrantView(props: {
                   onChange={() => setGrantScope("temporary_full_view")}
                   type="radio"
                 />
-                <span>Full view</span>
-                <small>All readable, non-private-locked notes for the grant window.</small>
+                <span>{grantAudienceLabel("temporary_full_view")}</span>
+                <small>{grantAudienceDescription("temporary_full_view")}</small>
               </label>
             </div>
           </div>
 
-          <TextField label="Expires after">
-            <select onChange={(event) => setGrantDays(event.target.value)} value={grantDays}>
-              <option value="7">7 days</option>
-              <option value="14">14 days</option>
-              <option value="30">30 days</option>
-            </select>
-          </TextField>
-
           <div className="care-field">
-            <span>Selected notes</span>
+            <span>Included memories</span>
             <div className="care-memory-list flat">
-              {eligibleNotes.length ? (
-                eligibleNotes.map((note) => (
-                  <label className="care-memory-row compact" key={note.entityKey}>
-                    <input
-                      checked={selectedGrantKeys.includes(note.entityKey)}
-                      disabled={grantScope === "temporary_full_view"}
-                      onChange={() => toggleSelected(note)}
-                      type="checkbox"
-                    />
+              {shareWindowNotes.length ? (
+                shareWindowNotes.map((note) => (
+                  <article className="care-memory-row compact readonly" key={note.entityKey}>
                     <span>
                       <strong>{safeText(note.decrypted?.title)}</strong>
-                      <small>{reflectionLabel(note)} / encrypted / updated {formatDate(note.updatedAt)}</small>
+                      <small>
+                        {reflectionLabel(note)} / encrypted / updated {formatDate(note.updatedAt)}
+                      </small>
                     </span>
-                    <em>{grantScope === "temporary_full_view" ? "included" : "select"}</em>
-                  </label>
+                    <em>{note.decrypted?.privateLocked ? "private" : "included"}</em>
+                  </article>
                 ))
               ) : (
                 <div className="care-empty">
-                  <strong>No readable reflections yet</strong>
-                  <p>Write or load encrypted reflections before preparing a Care Passport grant.</p>
+                  <strong>No memories in this time window</strong>
+                  <p>Choose a longer time range or save another memory before preparing a therapist grant.</p>
                 </div>
               )}
             </div>
           </div>
 
           <div className="care-actions">
-            <button className="care-btn primary" disabled={busy === "grant" || !wallet || !activeVault} type="submit">
+            <button
+              className={classNames("care-btn", "primary", lastSavedMemoryKey && "highlight")}
+              disabled={busy === "grant" || !wallet || !activeVault || !shareWindowNotes.length}
+              type="submit"
+            >
               <ShieldCheck size={16} />
               <span>{busy === "grant" ? "Creating" : "Create access grant"}</span>
             </button>
             <ActionButton icon={<FileText size={16} />} onClick={() => navigate("workbench")}>
               Review dashboard
-            </ActionButton>
-            <ActionButton icon={<RefreshCw size={16} />} onClick={() => setSelectedKeys(new Set(eligibleNotes.map((note) => note.entityKey)))}>
-              Select all readable
             </ActionButton>
           </div>
           {renderFeedback(grantFeedback, "Grant")}
@@ -1455,25 +1660,30 @@ function renderGrantView(props: {
         <aside className="care-panel">
           <div className="care-panel-head">
             <h2>Access summary</h2>
-            <span>{grantIncluded.length} selected</span>
+            <span>{shareWindowNotes.length} in window</span>
           </div>
           <div className="care-review">
             <article>
-              <span>Therapist wallet</span>
+              <span>Recipient wallet</span>
               <h3>{grantWallet || "Wallet required"}</h3>
               <p>{grantPurpose}</p>
             </article>
             <article>
-              <span>Scope</span>
-              <h3>{grantScope === "temporary_full_view" ? "Temporary full-view access" : "Selected notes only"}</h3>
-              <p>Expires after {grantDays} days. Access can be revoked before expiry.</p>
+              <span>Share window</span>
+              <h3>{timeWindowLabel(grantDays)}</h3>
+              <p>Access expires after {grantDays} days and can be revoked before expiry.</p>
+            </article>
+            <article>
+              <span>Audience</span>
+              <h3>{grantAudienceLabel(grantScope)}</h3>
+              <p>{grantAudienceDescription(grantScope)}</p>
             </article>
             <article>
               <span>Included notes</span>
               <p>
-                {grantIncluded.length
-                  ? grantIncluded.map((note) => `- ${safeText(note.decrypted?.title)}`).join("\n")
-                  : "Select at least one reflection before granting access."}
+                {shareWindowNotes.length
+                  ? shareWindowNotes.map((note) => `- ${safeText(note.decrypted?.title)}`).join("\n")
+                  : "Choose a longer time window before granting access."}
               </p>
             </article>
             <article>
@@ -1492,17 +1702,18 @@ function renderGrantView(props: {
 
 function renderWorkbenchView(props: {
   activeGrant: AccessGrantRecord | undefined;
+  activeHistoryNote: NoteRecord | undefined;
   activeVault: VaultRecord | undefined;
   busy: string;
-  eligibleNotes: NoteRecord[];
   entryFeedback: Feedback;
   filter: "all" | CareReflectionType;
-  filteredNotes: NoteRecord[];
   grantFeedback: Feedback;
   grants: AccessGrantRecord[];
   handleCopyPacket: () => void;
   handleCopyProof: () => void;
   loadWalletData: () => void;
+  grantDays: string;
+  navigate: (view: View) => void;
   packet: string;
   privateLockedCount: number;
   proofReceipt: string;
@@ -1511,31 +1722,34 @@ function renderWorkbenchView(props: {
   rehearsal: boolean;
   renderFeedback: (feedback: Feedback, label: string) => ReactNode;
   revokeGrant: (grantKey: string) => Promise<void>;
-  selectVisible: () => void;
-  selectedKeys: Set<string>;
-  selectedNotes: NoteRecord[];
   setFilter: (value: "all" | CareReflectionType) => void;
   setQuery: (value: string) => void;
-  setSelectedKeys: Dispatch<SetStateAction<Set<string>>>;
+  setActiveMemoryKey: (value: string) => void;
   setShowProof: (value: boolean) => void;
   showProof: boolean;
   spaceFeedback: Feedback;
-  toggleSelected: (note: NoteRecord) => void;
+  historyNotes: NoteRecord[];
+  visibleHistoryNotes: NoteRecord[];
+  activeMemoryKey: string;
+  shareWindowNotes: NoteRecord[];
+  lastSavedMemoryKey: string;
+  usingDemoData: boolean;
   wallet: string;
 }) {
   const {
     activeGrant,
+    activeHistoryNote,
     activeVault,
     busy,
-    eligibleNotes,
     entryFeedback,
     filter,
-    filteredNotes,
     grantFeedback,
     grants,
     handleCopyPacket,
     handleCopyProof,
     loadWalletData,
+    grantDays,
+    navigate,
     packet,
     privateLockedCount,
     proofReceipt,
@@ -1544,196 +1758,241 @@ function renderWorkbenchView(props: {
     rehearsal,
     renderFeedback,
     revokeGrant,
-    selectVisible,
-    selectedKeys,
-    selectedNotes,
     setFilter,
     setQuery,
-    setSelectedKeys,
+    setActiveMemoryKey,
     setShowProof,
     showProof,
     spaceFeedback,
-    toggleSelected,
+    historyNotes,
+    visibleHistoryNotes,
+    activeMemoryKey,
+    shareWindowNotes,
+    lastSavedMemoryKey,
+    usingDemoData,
     wallet,
   } = props;
+  const shareWindowCount = shareWindowNotes.length;
 
   return (
-    <section className="care-workspace">
-      <aside className="care-panel care-rail" aria-label="Encrypted reflections">
+    <section className="care-dashboard">
+      <div className="care-panel care-dashboard-main">
         <div className="care-panel-head">
           <div>
-            <h2>Memories</h2>
-            <p>Select the notes this session can use.</p>
+            <h1>Access dashboard</h1>
+            <p>Search all historical memories, inspect who can access them, and share the current time window.</p>
           </div>
-          <span>{selectedNotes.length} selected</span>
+          <span>{historyNotes.length} memories</span>
         </div>
 
-        <TextField label="Search memories">
-          <input onChange={(event) => setQuery(event.target.value)} placeholder="Search by title or tag" value={query} />
-        </TextField>
-        <TextField label="Type">
-          <select onChange={(event) => setFilter(event.target.value as "all" | CareReflectionType)} value={filter}>
-            <option value="all">All types</option>
-            {reflectionTypeOptions.map((type) => (
-              <option key={type} value={type}>
-                {reflectionTypeLabels[type]}
-              </option>
-            ))}
-          </select>
-        </TextField>
-
-        <div className="care-memory-list">
-          {filteredNotes.length ? (
-            filteredNotes.map((note) => {
-              const privateLocked = Boolean(note.decrypted?.privateLocked);
-              const readable = Boolean(note.decrypted);
-              const selected = selectedKeys.has(note.entityKey);
-              return (
-                <button
-                  aria-pressed={selected}
-                  className={classNames("care-memory-button", selected && "selected", privateLocked && "private", !readable && "locked")}
-                  disabled={!readable || privateLocked}
-                  key={note.entityKey}
-                  onClick={() => toggleSelected(note)}
-                  type="button"
-                >
-                  <span>
-                    <small>{reflectionLabel(note)}</small>
-                    <strong>{safeText(note.decrypted?.title)}</strong>
-                    <em>{safeText(note.decrypted?.body, "Use the original local key to read this reflection.")}</em>
-                  </span>
-                  <code>{note.entityKey.slice(0, 18)}...</code>
-                  <StatusDot tone={privateLocked ? "danger" : readable ? "success" : "warn"}>
-                    {privateLocked ? "Private lock" : readable ? "Readable" : "Key needed"}
-                  </StatusDot>
-                </button>
-              );
-            })
-          ) : (
-            <div className="care-empty">
-              <strong>No reflections match</strong>
-              <p>Adjust search or write a new encrypted reflection.</p>
-            </div>
-          )}
-        </div>
-
-        <div className="care-rail-foot">
-          <ActionButton icon={<RefreshCw size={16} />} onClick={loadWalletData}>
-            {busy === "load" ? "Loading" : rehearsal ? "Reload rehearsal" : "Load from Arkiv"}
-          </ActionButton>
-          <ActionButton icon={<CheckCircle2 size={16} />} onClick={selectVisible}>
-            Select visible
-          </ActionButton>
-        </div>
-      </aside>
-
-      <section className="care-workbench">
-        <div className="care-panel">
-          <div className="care-panel-head">
-            <div>
-              <h1>Access dashboard</h1>
-              <p>See what is selected, who can access it, and what gets copied before you share anything.</p>
-            </div>
-            <span>{selectedNotes.length} memories</span>
+        <div className="care-dashboard-toolbar">
+          <TextField label="Search memories">
+            <input onChange={(event) => setQuery(event.target.value)} placeholder="Search by title, body, or tag" value={query} />
+          </TextField>
+          <TextField label="Type">
+            <select onChange={(event) => setFilter(event.target.value as "all" | CareReflectionType)} value={filter}>
+              <option value="all">All types</option>
+              {reflectionTypeOptions.map((type) => (
+                <option key={type} value={type}>
+                  {reflectionTypeLabels[type]}
+                </option>
+              ))}
+            </select>
+          </TextField>
+          <div className="care-field care-field-static">
+            <span>Share window</span>
+            <p>{timeWindowLabel(grantDays)}</p>
           </div>
-          <div className="care-trust-grid" aria-label="Trust summary">
-            <div>
-              <StatusDot tone={activeVault ? "success" : "warn"}>{activeVault ? "Connected" : "Waiting"}</StatusDot>
-              <p>{wallet ? shortAddress(wallet) : "Connect a wallet"}</p>
-            </div>
-            <div>
-              <StatusDot tone={readableNotes.length ? "success" : "warn"}>{readableNotes.length ? "Protected" : "Locked"}</StatusDot>
-              <p>Encrypted locally</p>
-            </div>
-            <div>
-              <StatusDot tone={activeGrant ? "warn" : "muted"}>{activeGrant ? "Sharing" : "No access"}</StatusDot>
-              <p>{activeGrant ? `Access ends ${formatDate(activeGrant.expiresAt)}` : "No one has access yet"}</p>
-            </div>
-            <div>
-              <StatusDot tone={selectedNotes.length ? "success" : "warn"}>{selectedNotes.length ? "Ready" : "Review"}</StatusDot>
-              <p>{privateLockedCount ? `${privateLockedCount} private locked` : "Review selected notes"}</p>
-            </div>
+          <div className="care-dashboard-actions">
+            <ActionButton className="primary" disabled={!shareWindowCount} icon={<Clipboard size={16} />} onClick={handleCopyPacket}>
+              Copy care packet
+            </ActionButton>
+            <ActionButton disabled={!shareWindowCount} icon={<Copy size={16} />} onClick={handleCopyProof}>
+              Copy receipt
+            </ActionButton>
+            <ActionButton icon={<RefreshCw size={16} />} onClick={loadWalletData}>
+              {busy === "load" ? "Loading" : rehearsal ? "Reload rehearsal" : "Load from Arkiv"}
+            </ActionButton>
           </div>
         </div>
 
-        <div className="care-panel">
-          <div className="care-selected-strip">
-            <div>
-              <span>What gets shared</span>
-              <p>A readable care packet, not raw network records. Private-locked and unselected entries stay out.</p>
+        <div className="care-table-shell">
+          <table className="care-table" aria-label="Historical memories">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Memory</th>
+                <th>Type</th>
+                <th>Tags</th>
+                <th>Share window</th>
+                <th>Privacy</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visibleHistoryNotes.length ? (
+                visibleHistoryNotes.map((note) => {
+                  const privateLocked = Boolean(note.decrypted?.privateLocked);
+                  const inWindow = shareWindowNotes.some((shareNote) => shareNote.entityKey === note.entityKey);
+                  const active = activeMemoryKey === note.entityKey;
+                  const saved = lastSavedMemoryKey === note.entityKey;
+                  return (
+                    <tr
+                      aria-selected={active}
+                      className={classNames(active && "active", saved && "saved")}
+                      key={note.entityKey}
+                      onClick={() => setActiveMemoryKey(note.entityKey)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          setActiveMemoryKey(note.entityKey);
+                        }
+                      }}
+                      tabIndex={0}
+                    >
+                      <td data-label="Date">{formatDate(note.updatedAt)}</td>
+                      <td data-label="Memory">
+                        <strong>{safeText(note.decrypted?.title)}</strong>
+                        <small>{safeText(note.decrypted?.body, "Encrypted reflection")}</small>
+                      </td>
+                      <td data-label="Type">{reflectionLabel(note)}</td>
+                      <td data-label="Tags">{note.decrypted?.tags.join(", ") || "none"}</td>
+                      <td data-label="Share window">{inWindow ? timeWindowLabel(grantDays) : "Archived"}</td>
+                      <td data-label="Privacy">{privateLocked ? "Private lock" : "Shareable"}</td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td className="care-empty-table" colSpan={6} data-label="Status">
+                    <strong>No memories match</strong>
+                    <p>Adjust search or type filters to browse a different slice of history.</p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <aside className={classNames("care-panel care-drawer", activeHistoryNote && "connected")} aria-label="Memory details">
+        <div className="care-panel-head">
+          <div>
+            <p className="care-label">{activeHistoryNote ? "Linked row" : "Drawer"}</p>
+            <h2>{activeHistoryNote ? safeText(activeHistoryNote.decrypted?.title, "Memory details") : "Select a memory"}</h2>
+          </div>
+          <span>{activeHistoryNote ? reflectionLabel(activeHistoryNote) : "History"}</span>
+        </div>
+
+        {activeHistoryNote ? (
+          <>
+            <div className="care-drawer-card">
+              <span>Written</span>
+              <h3>{formatDate(activeHistoryNote.createdAt)}</h3>
+              <p>{safeText(activeHistoryNote.decrypted?.body, "Encrypted reflection content.")}</p>
+            </div>
+            <div className="care-review">
+              <article>
+                <span>Category</span>
+                <h3>{reflectionLabel(activeHistoryNote)}</h3>
+                <p>{activeHistoryNote.decrypted?.rememberNextSession || "Historical entry available in the dashboard."}</p>
+              </article>
+              <article>
+                <span>Share window</span>
+                <h3>{timeWindowLabel(grantDays)}</h3>
+                <p>{shareWindowCount} memories are ready for the current therapist packet.</p>
+              </article>
+              <article>
+                <span>Privacy</span>
+                <h3>{activeHistoryNote.decrypted?.privateLocked ? "Private lock" : "Shareable"}</h3>
+                <p>
+                  {activeHistoryNote.decrypted?.privateLocked
+                    ? "This entry stays out of therapist packets unless it is explicitly unlocked later."
+                    : "This entry can flow into the current time-based share window."}
+                </p>
+              </article>
+              <article>
+                <span>Latest save</span>
+                <p>
+                  {lastSavedMemoryKey === activeHistoryNote.entityKey
+                    ? "This is the most recently saved memory."
+                    : "Browse the table to inspect historical reflections."}
+                </p>
+              </article>
             </div>
             <div className="care-actions">
-              <ActionButton className="primary" disabled={!selectedNotes.length} icon={<Clipboard size={16} />} onClick={handleCopyPacket}>
+              <ActionButton className="primary highlight" icon={<ShieldCheck size={16} />} onClick={() => navigate("grant")}>
+                Grant memory to therapist
+              </ActionButton>
+              <ActionButton disabled={!shareWindowCount} icon={<Clipboard size={16} />} onClick={handleCopyPacket}>
                 Copy care packet
               </ActionButton>
-              <ActionButton disabled={!selectedNotes.length} icon={<Copy size={16} />} onClick={handleCopyProof}>
+              <ActionButton icon={<Copy size={16} />} onClick={handleCopyProof}>
                 Copy receipt
               </ActionButton>
-              <ActionButton icon={<XCircle size={16} />} onClick={() => setSelectedKeys(new Set())}>
-                Clear
-              </ActionButton>
             </div>
+          </>
+        ) : (
+          <div className="care-empty inline">
+            <strong>Select a memory</strong>
+            <p>Pick a row in the history table to inspect its details and share status.</p>
           </div>
-          <pre className="care-packet">{packet}</pre>
-        </div>
+        )}
 
-        <div className="care-panel">
-          <div className="care-panel-head">
-            <h2>Who has access</h2>
-            <span>{grants.length ? `${grants.length} record${grants.length === 1 ? "" : "s"}` : "none"}</span>
-          </div>
-          {grants.length ? (
-            <div className="care-access-list">
-              {grants.map((grant) => {
-                const status = grantStatus(grant);
-                const isActive = status === "active";
-                return (
-                  <article className={classNames("care-access-row", isActive && "active")} key={grant.entityKey}>
-                    <div>
-                      <span>{isActive ? "Active access" : status}</span>
-                      <h3>{grant.scope === "temporary_full_view" ? "Full view" : "Selected notes only"}</h3>
-                      <p>
-                        Therapist wallet {shortAddress(grant.therapistWallet)} can use the approved context until{" "}
-                        {formatDate(grant.expiresAt)}.
-                      </p>
-                    </div>
-                    {isActive ? (
-                      <ActionButton
-                        className="danger"
-                        disabled={busy === "revoke"}
-                        icon={<XCircle size={16} />}
-                        onClick={() => void revokeGrant(grant.entityKey)}
-                      >
-                        {busy === "revoke" ? "Revoking" : "Revoke access"}
-                      </ActionButton>
-                    ) : (
-                      <StatusDot tone={status === "revoked" ? "danger" : "muted"}>{status}</StatusDot>
-                    )}
-                  </article>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="care-empty inline">
-              <strong>No one has access yet</strong>
-              <p>Create a therapist access grant to show who can read selected notes.</p>
-            </div>
-          )}
+        <div className="care-panel-head">
+          <h2>Who has access</h2>
+          <span>{grants.length ? `${grants.length} record${grants.length === 1 ? "" : "s"}` : "none"}</span>
         </div>
+        {grants.length ? (
+          <div className="care-access-list">
+            {grants.map((grant) => {
+              const status = grantStatus(grant);
+              const isActive = status === "active";
+              return (
+                <article className={classNames("care-access-row", isActive && "active")} key={grant.entityKey}>
+                  <div>
+                    <span>{isActive ? "Active access" : status}</span>
+                    <h3>{grantAudienceLabel(grant.scope)}</h3>
+                    <p>
+                      Recipient wallet {shortAddress(grant.therapistWallet)} can use the approved packet until{" "}
+                      {formatDate(grant.expiresAt)}.
+                    </p>
+                  </div>
+                  {isActive ? (
+                    <ActionButton
+                      className="danger"
+                      disabled={busy === "revoke"}
+                      icon={<XCircle size={16} />}
+                      onClick={() => void revokeGrant(grant.entityKey)}
+                    >
+                      {busy === "revoke" ? "Revoking" : "Revoke access"}
+                    </ActionButton>
+                  ) : (
+                    <StatusDot tone={status === "revoked" ? "danger" : "muted"}>{status}</StatusDot>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="care-empty inline">
+            <strong>No one has access yet</strong>
+            <p>Create a therapist access grant to show who can read selected notes.</p>
+          </div>
+        )}
 
         <details className="care-proof" open={showProof} onToggle={(event) => setShowProof(event.currentTarget.open)}>
           <summary>Proof details</summary>
           <div className="care-proof-grid">
             <span>Mode</span>
-            <span>{rehearsal ? "Local rehearsal - no Braga write" : "Braga Testnet"}</span>
+            <span>{usingDemoData ? "Demo data / Braga model" : rehearsal ? "Local rehearsal - no Braga write" : "Braga Testnet"}</span>
             <span>Wallet</span>
             <code>{wallet || "Not connected"}</code>
             <span>Project scope</span>
             <code>{PROJECT_ATTRIBUTE.value}</code>
             <span>Diary space</span>
             <code>{activeVault?.entityKey ?? "No diary space yet"}</code>
-            <span>Selected records</span>
-            <code>{selectedNotes.map((note) => note.entityKey).join(", ") || "None selected"}</code>
+            <span>Share window</span>
+            <code>{timeWindowLabel(grantDays)}</code>
             <span>Access grants</span>
             <code>{grants.map((grant) => `${grant.entityKey} (${grantStatus(grant)})`).join(", ") || "No grant records"}</code>
             <span>Encrypted content</span>
@@ -1754,6 +2013,28 @@ function renderWorkbenchView(props: {
                 <span>This proof was created locally for rehearsal. It was not written to Braga.</span>
               </>
             )}
+          </div>
+          <div className="care-proof-model">
+            <article>
+              <span>Payload</span>
+              <p>Encrypted memory payload is a JSON envelope. Care text stays in ciphertext.</p>
+            </article>
+            <article>
+              <span>Typed attributes</span>
+              <p>project, entityType, owner, vaultKey, status, expiresAt, and therapistWallet form the searchable index.</p>
+            </article>
+            <article>
+              <span>Owner / creator</span>
+              <p>$owner controls update and revoke. $creator is the immutable transaction attribution from Arkiv.</p>
+            </article>
+            <article>
+              <span>Relationships</span>
+              <p>vaultKey links memories and access grants back to the diary space entity.</p>
+            </article>
+            <article>
+              <span>Expiry</span>
+              <p>Diary, memory, and grant records use expiresIn so access windows are time-bound.</p>
+            </article>
           </div>
           <pre className="care-proof-receipt">{proofReceipt}</pre>
         </details>
@@ -1776,7 +2057,7 @@ function renderWorkbenchView(props: {
             </p>
           </div>
         )}
-      </section>
+      </aside>
     </section>
   );
 }
@@ -1789,7 +2070,7 @@ function reflectionLabelFromDraft(draft: DraftNote): string {
 function buildContinuityPacket(notes: NoteRecord[], grant: AccessGrantRecord | undefined, rehearsal: boolean): string {
   const selected = notes.filter((note) => note.decrypted && !note.decrypted.privateLocked);
   if (!selected.length) {
-    return "Select at least one readable, non-private-locked reflection to prepare a Care Passport care packet.";
+    return "Choose a time window with at least one readable, non-private-locked reflection to prepare a Care Passport care packet.";
   }
 
   const lines = selected.map((note) => {
@@ -1809,10 +2090,11 @@ function buildContinuityPacket(notes: NoteRecord[], grant: AccessGrantRecord | u
     "Care Passport care packet",
     "",
     "Use this context for care continuity during the current grant window only.",
-    "Only selected Reflection Entries are included. Private-locked entries and unselected entries are not part of this packet.",
+    "Only reflections inside the chosen time window are included. Private-locked entries and older out-of-window entries are not part of this packet.",
     "",
-    "Grant terms:",
-    `- ${grant ? `Therapist wallet ${shortAddress(grant.therapistWallet)} only` : "No therapist grant is active yet"}`,
+    "Audience:",
+    `- ${grant ? grantAudienceLabel(grant.scope) : "No access audience is active yet"}`,
+    `- ${grant ? `Recipient wallet ${shortAddress(grant.therapistWallet)} only` : "No therapist grant is active yet"}`,
     `- ${grant ? `Expires ${formatDate(grant.expiresAt)}` : "Create a grant before sharing outside this browser"}`,
     "- User can revoke before expiry",
     "",
@@ -1831,18 +2113,20 @@ function buildProofReceipt(params: {
   grants: AccessGrantRecord[];
   notes: NoteRecord[];
   rehearsal: boolean;
+  shareWindowDays: string;
   wallet: string;
 }): string {
-  const { activeGrant, activeVault, grants, notes, rehearsal, wallet } = params;
+  const { activeGrant, activeVault, grants, notes, rehearsal, shareWindowDays, wallet } = params;
   return [
     "Care Passport verified receipt",
     `Mode: ${rehearsal ? "local rehearsal - no Braga write" : "Braga Testnet"}`,
     `Project: ${PROJECT_ATTRIBUTE.value}`,
     `Wallet: ${wallet || "not connected"}`,
     `Diary space: ${activeVault?.entityKey ?? "none"}`,
-    `Selected reflection records: ${notes.map((note) => note.entityKey).join(", ") || "none"}`,
+    `Share window: ${timeWindowLabel(shareWindowDays)}`,
+    `Share window records: ${notes.map((note) => note.entityKey).join(", ") || "none"}`,
     `Access grant: ${activeGrant ? `${activeGrant.entityKey} (${grantStatus(activeGrant)})` : "none"}`,
-    `Grant count: ${grants.length}`,
+    `Access count: ${grants.length}`,
     "Privacy boundary: private reflections are encrypted locally before Arkiv storage.",
     "Care boundary: this is a continuity packet, not an AI therapist or medical record system.",
   ].join("\n");
@@ -1869,71 +2153,129 @@ async function makeRehearsalData(): Promise<{
     updatedAt: now,
   };
 
-  const secrets: NoteSecret[] = [
+  const noteSeeds: Array<{ ageDays: number; secret: NoteSecret }> = [
     {
-      body: "Moved to Kuala Lumpur after a breakup. The first therapist session should not require retelling the full story from zero.",
-      eventContext: "Major move, relationship ending, and loss of previous care continuity.",
-      feeling: "Guarded, tired, but willing to start again if context is respected.",
-      memoryType: "life_event",
-      privateLocked: false,
-      rememberNextSession: "Start with current stability and sleep before deeper family history.",
-      tags: ["transition", "relationship"],
-      title: "Move and breakup context",
-      triggerPattern: "Big transitions make sleep and focus worse.",
-      whatHelped: "Short direct summaries and practical plans.",
+      ageDays: 2,
+      secret: {
+        body: "Moved to Kuala Lumpur after a breakup. The first therapist session should not require retelling the full story from zero.",
+        eventContext: "Major move, relationship ending, and loss of previous care continuity.",
+        feeling: "Guarded, tired, but willing to start again if context is respected.",
+        memoryType: "life_event",
+        privateLocked: false,
+        rememberNextSession: "Start with current stability and sleep before deeper family history.",
+        tags: ["transition", "relationship"],
+        title: "Move and breakup context",
+        triggerPattern: "Big transitions make sleep and focus worse.",
+        whatHelped: "Short direct summaries and practical plans.",
+      },
     },
     {
-      body: "Sleep gets difficult after conflict or uncertainty. Grounding and predictable evening routines help.",
-      feeling: "Anxious at night, calmer when the next day has structure.",
-      memoryType: "trigger",
-      privateLocked: false,
-      rememberNextSession: "Ask about recent sleep before evaluating mood.",
-      tags: ["sleep", "grounding"],
-      title: "Sleep disruption pattern",
-      triggerPattern: "Conflict, uncertainty, and late-night message checking.",
-      whatHelped: "No-phone wind down, breathing, and writing the next small task.",
+      ageDays: 4,
+      secret: {
+        body: "Sleep gets difficult after conflict or uncertainty. Grounding and predictable evening routines help.",
+        feeling: "Anxious at night, calmer when the next day has structure.",
+        memoryType: "trigger",
+        privateLocked: false,
+        rememberNextSession: "Ask about recent sleep before evaluating mood.",
+        tags: ["sleep", "grounding"],
+        title: "Sleep disruption pattern",
+        triggerPattern: "Conflict, uncertainty, and late-night message checking.",
+        whatHelped: "No-phone wind down, breathing, and writing the next small task.",
+      },
     },
     {
-      body: "The first month goal is to build enough trust to discuss the breakup, sleep, and a practical support plan.",
-      eventContext: "New therapist intake.",
-      feeling: "Hopeful if the session has structure.",
-      memoryType: "therapy_goal",
-      privateLocked: false,
-      rememberNextSession: "Avoid rushing into diagnostic labels.",
-      tags: ["goal", "intake"],
-      title: "Session goal for first month",
-      whatHelped: "Clear agenda, permission before reframing.",
+      ageDays: 6,
+      secret: {
+        body: "The first month goal is to build enough trust to discuss the breakup, sleep, and a practical support plan.",
+        eventContext: "New therapist intake.",
+        feeling: "Hopeful if the session has structure.",
+        memoryType: "therapy_goal",
+        privateLocked: false,
+        rememberNextSession: "Avoid rushing into diagnostic labels.",
+        tags: ["goal", "intake"],
+        title: "Session goal for first month",
+        whatHelped: "Clear agenda, permission before reframing.",
+      },
     },
     {
-      body: "The user prefers therapists to ask before reframing family history or summarizing motives.",
-      feeling: "More trusting when interpretations are checked first.",
-      memoryType: "personal_preference",
-      privateLocked: false,
-      rememberNextSession: "Ask before reframing family history.",
-      tags: ["preference", "family"],
-      title: "Ask before family reframing",
+      ageDays: 9,
+      secret: {
+        body: "The user prefers therapists to ask before reframing family history or summarizing motives.",
+        feeling: "More trusting when interpretations are checked first.",
+        memoryType: "personal_preference",
+        privateLocked: false,
+        rememberNextSession: "Ask before reframing family history.",
+        tags: ["preference", "family"],
+        title: "Ask before family reframing",
+      },
     },
     {
-      body: "This entry is intentionally private-locked to show that not every diary item enters a therapist handoff.",
-      eventContext: "Sensitive third-party detail.",
-      feeling: "Not ready to share this in intake.",
-      memoryType: "relationship_context",
-      privateLocked: true,
-      rememberNextSession: "Only share if explicitly unlocked later.",
-      tags: ["private", "boundary"],
-      title: "Private family detail",
+      ageDays: 14,
+      secret: {
+        body: "A difficult message thread in the evening made the next day feel heavier. The pattern is clear enough to mention in intake without telling the whole thread.",
+        feeling: "Overstimulated and drained after long chats.",
+        memoryType: "emotion_pattern",
+        privateLocked: false,
+        rememberNextSession: "Keep the explanation concise and focus on the trigger-response loop.",
+        tags: ["message", "overload"],
+        title: "Evening message spiral",
+        triggerPattern: "Long, unresolved text threads late at night.",
+        whatHelped: "Turn off notifications after dinner and sleep earlier.",
+      },
+    },
+    {
+      ageDays: 21,
+      secret: {
+        body: "Weekly walks improved mood enough to make therapy sessions feel easier to prepare for.",
+        eventContext: "Recovery routine and movement.",
+        feeling: "Calmer on days with sunlight and movement.",
+        memoryType: "coping_pattern",
+        privateLocked: false,
+        rememberNextSession: "Keep movement in the support plan.",
+        tags: ["movement", "routine"],
+        title: "Walking helps regulate mood",
+        whatHelped: "Short walks, daylight, and no agenda pressure.",
+      },
+    },
+    {
+      ageDays: 35,
+      secret: {
+        body: "This entry is intentionally private-locked to show that not every diary item enters a therapist handoff.",
+        eventContext: "Sensitive third-party detail.",
+        feeling: "Not ready to share this in intake.",
+        memoryType: "relationship_context",
+        privateLocked: true,
+        rememberNextSession: "Only share if explicitly unlocked later.",
+        tags: ["private", "boundary"],
+        title: "Private family detail",
+      },
+    },
+    {
+      ageDays: 63,
+      secret: {
+        body: "Sleep got worse after a big disagreement and I wrote down what actually helped instead of how I thought I should respond.",
+        eventContext: "Older care continuity note.",
+        feeling: "Embarrassed at first, then more grounded once the pattern was written down.",
+        memoryType: "life_event",
+        privateLocked: false,
+        rememberNextSession: "Use this as a reminder that the pattern has happened before.",
+        tags: ["history", "pattern"],
+        title: "Older continuity note",
+        triggerPattern: "Conflict and sudden uncertainty.",
+        whatHelped: "Written checklists and one practical next step.",
+      },
     },
   ];
 
   const notes = await Promise.all(
-    secrets.map(async (secret, index) => {
-      const createdAt = now - (index + 1) * 24 * 60 * 60 * 1000;
+    noteSeeds.map(async ({ ageDays, secret }) => {
+      const createdAt = now - ageDays * 24 * 60 * 60 * 1000;
       const envelope = await encryptJson(secret, REHEARSAL_KEY);
       return {
         contentClass: secret.memoryType,
         createdAt,
         decrypted: secret,
-        entityKey: rehearsalEntityKey("memory", index + 101),
+        entityKey: rehearsalEntityKey("memory", ageDays + 100),
         envelope,
         owner: REHEARSAL_WALLET.toLowerCase(),
         status: "active" as const,
@@ -1943,7 +2285,9 @@ async function makeRehearsalData(): Promise<{
     }),
   );
 
-  const includedNoteKeys = notes.filter((note) => !note.decrypted?.privateLocked).slice(0, 3).map((note) => note.entityKey);
+  const includedNoteKeys = notes
+    .filter((note) => !note.decrypted?.privateLocked && note.createdAt >= now - 14 * 24 * 60 * 60 * 1000)
+    .map((note) => note.entityKey);
   const grantSecret: GrantSecret = {
     includedNoteKeys,
     purpose: "Continuity for intake sessions after changing therapists. Use only for history, current goals, and support preferences.",

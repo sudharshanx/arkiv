@@ -7,26 +7,25 @@ const normalizedAppSource = appSource.replace(/\s+/g, " ");
 
 test("homepage uses Care Passport positioning copy", () => {
   assert.match(normalizedAppSource, /Care Passport/);
-  assert.match(normalizedAppSource, /Change therapists without starting over\./);
-  assert.match(
-    normalizedAppSource,
-    /Care Passport prepares a therapist-ready care packet you control: choose the reflections, review what is included, grant time-bound access, and copy only the context you approve\./,
-  );
-  assert.match(normalizedAppSource, /Care Passport is not an AI therapist or a medical record system\./);
-  assert.match(normalizedAppSource, /Prepare handoff/);
-  assert.match(normalizedAppSource, /Write reflection/);
-  assert.match(normalizedAppSource, /Private diary content is encrypted locally/);
-  assert.match(normalizedAppSource, /Choose\. Review\. Share\. Expire\./);
-  assert.match(normalizedAppSource, /Your care context moves with you, under your control/);
+  assert.match(normalizedAppSource, /Write privately\. Share selectively\./);
+  assert.match(normalizedAppSource, /Write diaries encrypted forever\. Take them with you\. Share only the parts you choose, without walled gardens\./);
+  assert.match(normalizedAppSource, /Care Passport is a private, wallet-owned care system for personal diaries, AI-agent-assisted review, and direct therapist sharing\./);
+  assert.match(normalizedAppSource, /Create reflection/);
+  assert.match(normalizedAppSource, /Share access/);
+  assert.match(normalizedAppSource, /Proof details on demand/);
+  assert.match(normalizedAppSource, /Connect\. Create\. Review\. Choose audience\. Share\. Revoke\./);
+  assert.match(normalizedAppSource, /Your life context should move with you, but stay under your control/);
 });
 
 test("homepage names the concrete Care Passport product surfaces", () => {
-  assert.match(normalizedAppSource, /Therapist-ready care packet/);
-  assert.match(normalizedAppSource, /Structured Reflection Entries/);
-  assert.match(normalizedAppSource, /Consent before sharing/);
-  assert.match(normalizedAppSource, /Continuity Brief/);
-  assert.match(normalizedAppSource, /14-day care grant/);
-  assert.match(normalizedAppSource, /Proof visible on demand/);
+  assert.match(normalizedAppSource, /Who has access/);
+  assert.match(normalizedAppSource, /14-day access/);
+  assert.match(normalizedAppSource, /Privacy boundary/);
+  assert.match(normalizedAppSource, /Encrypted forever/);
+  assert.match(normalizedAppSource, /Selected context/);
+  assert.match(normalizedAppSource, /Raw selected data/);
+  assert.match(normalizedAppSource, /Connect\. Create\. Review\. Choose audience\. Share\. Revoke\./);
+  assert.match(normalizedAppSource, /Proof details on demand/);
   assert.match(normalizedAppSource, /Revoke anytime/);
 });
 
@@ -41,6 +40,7 @@ test("homepage avoids banned positioning copy", () => {
     "HIPAA",
     "diagnosis",
     "Carry your story",
+    "Arkiv Context",
   ]) {
     assert.doesNotMatch(appSource, new RegExp(phrase, "i"));
   }

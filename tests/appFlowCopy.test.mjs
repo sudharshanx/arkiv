@@ -7,22 +7,39 @@ const cssSource = readFileSync(new URL("../src/styles.css", import.meta.url), "u
 const normalizedAppSource = appSource.replace(/\s+/g, " ");
 const normalizedCssSource = cssSource.replace(/\s+/g, " ");
 
-test("Care Passport app uses the Choose -> Review -> Share -> Expire workflow", () => {
+test("Care Passport app uses the concrete wallet -> reflection -> access flow", () => {
   assert.match(normalizedAppSource, /Care Passport/);
-  assert.match(normalizedAppSource, /Choose\. Review\. Share\. Expire\./);
-  assert.match(normalizedAppSource, /Write \/ protect/);
-  assert.match(normalizedAppSource, /Grant \/ consent review/);
-  assert.match(normalizedAppSource, /Prepare a therapist-ready care packet\./);
-  assert.match(normalizedAppSource, /Care packet review/);
-  assert.match(normalizedAppSource, /Care Passport continuity packet/);
+  assert.match(normalizedAppSource, /Connect\. Create\. Review\. Choose audience\. Share\. Revoke\./);
+  assert.match(normalizedAppSource, /Write new/);
+  assert.match(normalizedAppSource, /Grant memory/);
+  assert.match(normalizedAppSource, /Dashboard/);
+  assert.match(normalizedAppSource, /Connect MetaMask/);
+  assert.match(normalizedAppSource, /Encrypted forever/);
+  assert.match(normalizedAppSource, /Connect wallet/);
   assert.match(normalizedAppSource, /Create a private reflection\./);
+  assert.match(normalizedAppSource, /Choose who can see this\./);
+  assert.match(normalizedAppSource, /Access dashboard/);
+  assert.match(normalizedAppSource, /Historical memories/);
+  assert.match(normalizedAppSource, /Who has access/);
   assert.match(normalizedAppSource, /Copy care packet/);
+  assert.match(normalizedAppSource, /Revoke access/);
+  assert.match(normalizedAppSource, /Review access/);
+  assert.match(normalizedAppSource, /Open dashboard/);
+  assert.match(normalizedAppSource, /Share memories from/);
+  assert.match(normalizedAppSource, /Memory saved/);
+  assert.match(normalizedAppSource, /Grant memory to therapist/);
+  assert.match(normalizedAppSource, /AI agent context/);
+  assert.match(normalizedAppSource, /Therapist raw data/);
+  assert.match(normalizedAppSource, /Audience/);
+  assert.match(normalizedAppSource, /MetaMask/);
+  assert.doesNotMatch(normalizedAppSource, /Select visible/);
 });
 
 test("Care Passport model creates reflections and access grants without dropping Arkiv proof", () => {
   assert.match(normalizedAppSource, /createVaultEntity/);
   assert.match(normalizedAppSource, /createNoteEntity/);
   assert.match(normalizedAppSource, /createAccessGrantEntity/);
+  assert.match(normalizedAppSource, /revokeAccessGrantEntity/);
   assert.match(normalizedAppSource, /fetchAccessGrants/);
   assert.match(normalizedAppSource, /PROJECT_ATTRIBUTE/);
   assert.match(normalizedAppSource, /Diary Space record: 90-day expiry on Braga\./);
@@ -57,33 +74,34 @@ test("rehearsal mode is seeded, local, and never claims Braga writes", () => {
 test("continuity packet includes only selected non-private reflections", () => {
   assert.match(normalizedAppSource, /privateLocked/);
   assert.match(normalizedAppSource, /non-private-locked reflection/);
-  assert.match(normalizedAppSource, /Only selected Reflection Entries are included\. Private-locked entries and unselected entries are not part of this packet\./);
+  assert.match(
+    normalizedAppSource,
+    /Only reflections inside the chosen time window are included\. Private-locked entries and older out-of-window entries are not part of this packet\./,
+  );
   assert.match(normalizedAppSource, /Source: \$\{note\.entityKey\}/);
-  assert.match(normalizedAppSource, /Only selected reflections were included\./);
+  assert.match(normalizedAppSource, /Care Passport care packet/);
+  assert.match(normalizedAppSource, /Audience:/);
   assert.match(normalizedAppSource, /Do not treat this as a permanent clinical record/);
   assert.match(normalizedAppSource, /not an AI therapist or medical record system/);
   assert.match(normalizedAppSource, /Private family detail/);
 });
 
-test("Care Passport stylesheet implements the supplied dark care palette", () => {
+test("Care Passport stylesheet implements the supplied dark terminal palette", () => {
   assert.match(cssSource, /GeistMono-Regular\.woff2/);
   assert.match(cssSource, /GeistPixel-Grid\.woff2/);
-  assert.match(cssSource, /--bg:\s*#06100d;/);
-  assert.match(cssSource, /--surface:\s*#0f1b17;/);
-  assert.match(cssSource, /--accent:\s*#5eead4;/);
-  assert.match(normalizedCssSource, /\.care-workspace \{[^}]*grid-template-columns: minmax\(300px, 360px\) minmax\(0, 1fr\);/);
+  assert.match(cssSource, /--bg:\s*#070b12;/);
+  assert.match(cssSource, /--surface:\s*#101826;/);
+  assert.match(cssSource, /--accent:\s*#38bdf8;/);
+  assert.match(normalizedCssSource, /\.care-shell \{[^}]*grid-template-columns: minmax\(0, 1fr\);/);
   assert.match(normalizedCssSource, /\.care-trust-grid \{[^}]*grid-template-columns: repeat\(4, minmax\(0, 1fr\)\);/);
   assert.match(cssSource, /\.care-toast/);
 });
 
 test("old generic and pre-rename workbench UI is removed from the Care Passport source", () => {
-  assert.doesNotMatch(appSource, /Use verified memory in an agent/);
-  assert.doesNotMatch(appSource, /Copy for agent/);
+  assert.doesNotMatch(appSource, /Arkiv Context/);
+  assert.doesNotMatch(appSource, /Continuity Brief/);
   assert.doesNotMatch(appSource, /Proof Center/);
   assert.doesNotMatch(appSource, /CHATGPT_LOGO_URL|CLAUDE_LOGO_URL/);
-  assert.doesNotMatch(appSource, /Arkiv Context/);
-  assert.doesNotMatch(appSource, /Therapist handoff packet/);
-  assert.doesNotMatch(appSource, /Carry your story/);
   assert.doesNotMatch(cssSource, /\.saas-console/);
   assert.doesNotMatch(cssSource, /\.proof-chain/);
 });

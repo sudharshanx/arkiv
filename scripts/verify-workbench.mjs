@@ -154,9 +154,10 @@ async function snapshot(send) {
         activeNav: [...document.querySelectorAll(".care-nav button.active")].map((button) => button.textContent.trim()),
         buttons: [...document.querySelectorAll("button, a.care-btn")].filter(visible).map((node) => ({ text: node.textContent.trim(), disabled: Boolean(node.disabled) })),
         hasHorizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
-        memoryButtons: document.querySelectorAll(".care-memory-button").length,
+        historyRows: document.querySelectorAll(".care-table tbody tr").length,
+        tablePresent: Boolean(document.querySelector(".care-table")),
+        drawerPresent: Boolean(document.querySelector(".care-drawer")),
         proofOpen: Boolean(document.querySelector(".care-proof[open]")),
-        selectedButtons: document.querySelectorAll(".care-memory-button.selected").length,
         text,
         trustItems: document.querySelectorAll(".care-trust-grid > div").length,
       };
@@ -172,32 +173,99 @@ function expectTexts(snapshotValue, texts, label) {
 }
 
 async function verifyWorkbench(send) {
-  await waitForText(send, "Care packet review");
+  await waitForText(send, "Access dashboard");
+  await clickText(send, "Dashboard");
+  await waitForText(send, "Search all historical memories");
   await waitForText(send, "Move and breakup context");
   const state = await snapshot(send);
   assert(!state.hasHorizontalOverflow, "Care workbench has horizontal overflow on desktop.");
-  assert(state.activeNav.includes("Workbench"), "Workbench nav state is not active.");
-  assert(state.memoryButtons >= 5, "Rehearsal workbench should seed at least five reflections.");
-  assert(state.selectedButtons >= 3, "Rehearsal workbench should start with selected non-private reflections.");
-  assert(state.trustItems === 4, "Trust grid should expose four compact proof/status items.");
+  assert(state.historyRows >= 6, "Rehearsal workbench should seed a historical table with multiple reflections.");
+  assert(state.tablePresent, "Dashboard should render a SaaS-style table.");
+  assert(state.drawerPresent, "Dashboard should render a detail drawer.");
   expectTexts(
     state,
     [
       "Local rehearsal",
       "This run uses seeded local proof data only. It does not write to Braga.",
-      "Care packet review",
-      "What the therapist receives",
-      "Private-locked and unselected entries stay out",
+      "Access dashboard",
+      "Search memories",
+      "Who has access",
+      "Write new",
+      "Grant memory",
+      "Dashboard",
       "Copy care packet",
       "Copy receipt",
-      "Private lock",
-      "Do not treat this as a permanent clinical record",
+      "Share window",
       "Proof details",
     ],
     "Workbench",
   );
   await screenshot(send, desktopWorkbenchShot);
+  await clickText(send, "Write new");
+}
 
+async function verifyWorkbenchProof(send) {
+  await waitForText(send, "Create a private reflection.");
+  const state = await snapshot(send);
+  assert(!state.hasHorizontalOverflow, "Write view has horizontal overflow on desktop.");
+  expectTexts(
+    state,
+    [
+      "Connect wallet",
+      "Local wallet",
+      "Local key active",
+      "Local key",
+      "Reflection entry",
+      "Reflection type",
+      "Event or context",
+      "Private-lock this entry",
+      "Save encrypted reflection",
+      "Reflection preview",
+      "Reflection Entry record: 30-day expiry on Braga.",
+      "Review access",
+    ],
+    "Write view",
+  );
+  await screenshot(send, desktopWriteShot);
+  await clickText(send, "Save encrypted reflection");
+  await waitForText(send, "Memory saved");
+  await waitForText(send, "Grant memory to therapist");
+  await clickText(send, "Grant memory to therapist");
+}
+
+async function verifyGrant(send) {
+  await waitForText(send, "Choose who can see this.");
+  const state = await snapshot(send);
+  assert(!state.hasHorizontalOverflow, "Grant view has horizontal overflow on desktop.");
+  expectTexts(
+    state,
+    [
+      "Share access",
+      "Connect wallet",
+      "Local wallet",
+      "Share details",
+      "Share memories from",
+      "Recipient wallet",
+      "Audience",
+      "AI agent context",
+      "Therapist raw data",
+      "Included memories",
+      "Grant action highlighted below",
+      "Create access grant",
+      "Access summary",
+      "Privacy boundary",
+      "Review dashboard",
+    ],
+    "Grant view",
+  );
+  await screenshot(send, desktopGrantShot);
+  await clickText(send, "Create access grant");
+  await waitForText(send, "Access dashboard");
+}
+
+async function verifyProof(send) {
+  await waitForText(send, "Access dashboard");
+  await waitForText(send, "Search all historical memories");
   await clickText(send, "Proof details");
   const proofState = await snapshot(send);
   assert(proofState.proofOpen, "Proof details did not expand.");
@@ -206,7 +274,7 @@ async function verifyWorkbench(send) {
     [
       "local rehearsal - no Braga write",
       "Project scope",
-      "Selected records",
+      "Share window",
       "Access grants",
       "This proof was created locally for rehearsal. It was not written to Braga.",
     ],
@@ -214,62 +282,16 @@ async function verifyWorkbench(send) {
   );
 }
 
-async function verifyWrite(send) {
-  await clickText(send, "Write");
-  await waitForText(send, "Create a private reflection.");
-  const state = await snapshot(send);
-  assert(!state.hasHorizontalOverflow, "Write view has horizontal overflow on desktop.");
-  assert(state.activeNav.includes("Write"), "Write nav state is not active.");
-  expectTexts(
-    state,
-    [
-      "Write / protect",
-      "Local key active",
-      "Reflection entry",
-      "Reflection type",
-      "Event or context",
-      "Private-lock this entry",
-      "Save encrypted entry",
-      "Entry preview",
-      "Reflection Entry record: 30-day expiry on Braga.",
-    ],
-    "Write view",
-  );
-  await screenshot(send, desktopWriteShot);
-}
-
-async function verifyGrant(send) {
-  await clickText(send, "Grant");
-  await waitForText(send, "Prepare a therapist-ready care packet.");
-  const state = await snapshot(send);
-  assert(!state.hasHorizontalOverflow, "Grant view has horizontal overflow on desktop.");
-  assert(state.activeNav.includes("Grant"), "Grant nav state is not active.");
-  expectTexts(
-    state,
-    [
-      "Grant / consent review",
-      "Therapist access",
-      "Therapist wallet identity",
-      "Selected packet",
-      "Full view",
-      "Included context",
-      "Create access grant",
-      "Consent review",
-      "Privacy boundary",
-    ],
-    "Grant view",
-  );
-  await screenshot(send, desktopGrantShot);
-}
-
 async function verifyMobile(send) {
   await setViewport(send, 390, 844, true);
   await navigate(send, appUrl);
-  await waitForText(send, "Care packet review");
+  await waitForText(send, "Access dashboard");
+  await clickText(send, "Dashboard");
+  await waitForText(send, "Search all historical memories");
   await waitForText(send, "Move and breakup context");
   const state = await snapshot(send);
   assert(!state.hasHorizontalOverflow, "Care workbench has horizontal overflow on mobile.");
-  expectTexts(state, ["Local rehearsal", "Care packet review", "Memories", "Copy care packet"], "Mobile workbench");
+  expectTexts(state, ["Local rehearsal", "Access dashboard", "Copy care packet", "Who has access", "Write new", "Grant memory", "Dashboard"], "Mobile workbench");
   await screenshot(send, mobileWorkbenchShot);
 }
 
@@ -280,7 +302,7 @@ async function main() {
     await setViewport(send, 1440, 1000);
     await navigate(send, appUrl);
     await verifyWorkbench(send);
-    await verifyWrite(send);
+    await verifyWorkbenchProof(send);
     await verifyGrant(send);
     await verifyMobile(send);
 

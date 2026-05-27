@@ -6,9 +6,9 @@ Local checkout inspected at `/private/tmp/arkiv-modifier-vault`.
 
 ## Executive Verdict
 
-ModifierVault is a stronger broad Arkiv graph demo. Arkiv Context should not try to beat it by adding more graph concepts.
+ModifierVault is a stronger broad Arkiv graph demo. Care Passport should not try to beat it by adding more graph concepts.
 
-Arkiv Context wins if the judge understands one product loop faster:
+Care Passport wins if the judge understands one product loop faster:
 
 ```txt
 Create encrypted memory -> verify read-back -> select memory -> copy agent context
@@ -18,7 +18,7 @@ The counterposition is:
 
 ```txt
 ModifierVault shows an AI memory graph.
-Arkiv Context proves private wallet-owned memory can be unlocked and carried into any agent.
+Care Passport proves private wallet-owned memory can be unlocked and carried into any agent.
 ```
 
 ## Competitor Strengths
@@ -39,18 +39,18 @@ Arkiv Context proves private wallet-owned memory can be unlocked and carried int
 
 ## Scorecard
 
-| Category | ModifierVault | Arkiv Context | Winner |
+| Category | ModifierVault | Care Passport | Winner |
 | --- | --- | --- | --- |
-| 90-second clarity | Broad, multi-route graph story | One loop: create, verify, copy | Arkiv Context |
+| 90-second clarity | Broad, multi-route graph story | One loop: create, verify, copy | Care Passport |
 | Arkiv schema breadth | Memory, modifier, reflection entities | Workspace, encrypted memory, relationship | ModifierVault |
-| Privacy posture | Optional public, metadata-only, encrypted modes | Encrypted memory by default | Arkiv Context |
-| Wallet ownership proof | Uses owner/creator and wallet writes | Uses wallet writes plus protocol owner filtering | Arkiv Context |
+| Privacy posture | Optional public, metadata-only, encrypted modes | Encrypted memory by default | Care Passport |
+| Wallet ownership proof | Uses owner/creator and wallet writes | Uses wallet writes plus protocol owner filtering | Care Passport |
 | AI usefulness | Generates reflections with Groq | Exports context to any agent | Tie, different thesis |
-| Dependency risk | Braga + wallet + Groq | Braga + wallet, with local rehearsal fallback | Arkiv Context |
+| Dependency risk | Braga + wallet + Groq | Braga + wallet, with local rehearsal fallback | Care Passport |
 | Visual memorability | Graph/atlas is easy to remember | Context workbench is simpler but less theatrical | ModifierVault |
 | Submission packaging | Very complete | Needs matching benchmark/submission polish | ModifierVault |
 | Judge proof depth | Strong if full graph is live | Stronger proof receipt and read-back focus | Tie |
-| Product sophistication | Ambitious, busy | Calmer, more focused | Arkiv Context if execution stays clean |
+| Product sophistication | Ambitious, busy | Calmer, more focused | Care Passport if execution stays clean |
 
 ## What We Should Copy
 
@@ -70,21 +70,21 @@ Copy structurally, not conceptually:
 - Do not make AI generation a required dependency.
 - Do not offer multiple privacy modes in the main flow. Encrypted memory is the point.
 
-## Arkiv Context Differentiators
+## Care Passport Differentiators
 
 ### 1. Stricter Privacy
 
-ModifierVault allows public and metadata-only memory modes. Arkiv Context should stay opinionated: private memory content is encrypted locally before storage.
+ModifierVault allows public and metadata-only memory modes. Care Passport should stay opinionated: private memory content is encrypted locally before storage.
 
 Judge line:
 
 ```txt
-Arkiv Context does not ask which privacy mode you want. It encrypts the memory first.
+Care Passport does not ask which privacy mode you want. It encrypts the memory first.
 ```
 
 ### 2. More Direct Agent Utility
 
-ModifierVault proves AI interpretation. Arkiv Context proves agent portability.
+ModifierVault proves AI interpretation. Care Passport proves agent portability.
 
 Judge line:
 
@@ -94,7 +94,7 @@ The output is not another dashboard. It is a clean context packet the user can p
 
 ### 3. Better Consent Boundary
 
-Arkiv Context’s strongest product claim is that selected memories enter an agent only when the user copies them.
+Care Passport’s strongest product claim is that selected memories enter an agent only when the user copies them.
 
 Judge line:
 
@@ -104,7 +104,7 @@ The memory exists outside the agent. The user decides when it enters the convers
 
 ### 4. Better Outage Story
 
-ModifierVault appears to depend on live Braga for the main path. Arkiv Context has `/app?rehearsal=1` for outage testing.
+ModifierVault appears to depend on live Braga for the main path. Care Passport has `/app?rehearsal=1` for outage testing.
 
 Judge line:
 
@@ -114,7 +114,7 @@ Local rehearsal proves the encrypted create-read-copy loop while Braga is unavai
 
 ### 5. Stronger Ownership Read-Back
 
-Arkiv Context reads by public owner attributes and protocol owner filtering. This makes the proof less vulnerable to spoofed owner fields.
+Care Passport reads by public owner attributes and protocol owner filtering. This makes the proof less vulnerable to spoofed owner fields.
 
 Judge line:
 
@@ -135,7 +135,7 @@ The UI does not only trust a public owner label. Reads are scoped to records own
 ## Winning Demo Script
 
 ```txt
-A vault stores data. Arkiv Context proves who owns the memory, who can read it, and when it is allowed into an agent.
+A vault stores data. Care Passport proves who owns the memory, who can read it, and when it is allowed into an agent.
 
 First I create an encrypted memory with my wallet.
 The private content is encrypted in this browser with a local key.
