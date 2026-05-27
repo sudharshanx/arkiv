@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".tmp/test-dist",
+    "rootDir": "src",
+    "module": "ESNext",
+    "declaration": false
+  },
+  "include": ["src/lib/portableContext.ts", "src/lib/types.ts"]
+}
