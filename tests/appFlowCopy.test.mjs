@@ -21,6 +21,8 @@ test("Care Passport app uses the concrete wallet -> reflection -> access flow", 
   assert.match(normalizedAppSource, /Access dashboard/);
   assert.match(normalizedAppSource, /Historical memories/);
   assert.match(normalizedAppSource, /Who has access/);
+  assert.match(normalizedAppSource, /<th>Access<\/th>/);
+  assert.match(normalizedAppSource, /memoryAccessStatus\(note, grants\)/);
   assert.match(normalizedAppSource, /Copy care packet/);
   assert.match(normalizedAppSource, /Revoke access/);
   assert.match(normalizedAppSource, /Review access/);
@@ -32,6 +34,11 @@ test("Care Passport app uses the concrete wallet -> reflection -> access flow", 
   assert.match(normalizedAppSource, /Therapist raw data/);
   assert.match(normalizedAppSource, /Audience/);
   assert.match(normalizedAppSource, /MetaMask/);
+  assert.match(normalizedAppSource, /Unlock private passport/);
+  assert.match(normalizedAppSource, /Care Passport passphrase/);
+  assert.match(normalizedAppSource, /Readable after passphrase unlock/);
+  assert.match(normalizedAppSource, /If this passphrase is lost, private reflections cannot be recovered/);
+  assert.match(normalizedAppSource, /Passphrase to PBKDF2-SHA256 to AES-GCM encrypt\/decrypt/);
   assert.doesNotMatch(normalizedAppSource, /Select visible/);
 });
 
@@ -40,6 +47,7 @@ test("Care Passport model creates reflections and access grants without dropping
   assert.match(normalizedAppSource, /createNoteEntity/);
   assert.match(normalizedAppSource, /createAccessGrantEntity/);
   assert.match(normalizedAppSource, /revokeAccessGrantEntity/);
+  assert.match(normalizedAppSource, /label: "Revoked", tone: "danger"/);
   assert.match(normalizedAppSource, /fetchAccessGrants/);
   assert.match(normalizedAppSource, /PROJECT_ATTRIBUTE/);
   assert.match(normalizedAppSource, /Diary Space record: 90-day expiry on Braga\./);
@@ -63,6 +71,8 @@ test("wallet switch cannot reuse another wallet's diary space", () => {
 
 test("rehearsal mode is seeded, local, and never claims Braga writes", () => {
   assert.match(normalizedAppSource, /isLocalRehearsalMode/);
+  assert.match(normalizedAppSource, /const displayNotes = rehearsal \? mergeByEntityKey\(demoNotes, activeVaultNotes\)/);
+  assert.match(normalizedAppSource, /const displayGrants = rehearsal \? mergeByEntityKey\(demoGrants, grants\)/);
   assert.match(normalizedAppSource, /Seeded local rehearsal diary space\. No Arkiv transaction was sent\./);
   assert.match(normalizedAppSource, /Seeded encrypted local reflections\. No Arkiv transaction was sent\./);
   assert.match(normalizedAppSource, /Seeded local therapist grant\. No Arkiv transaction was sent\./);

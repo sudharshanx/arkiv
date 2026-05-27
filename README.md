@@ -202,7 +202,15 @@ Arkiv is public. This app encrypts payload content only.
 Wallet and passphrase have separate jobs:
 
 - Wallet: owns the Arkiv entity and controls update/delete permissions.
-- Passphrase: decrypts the encrypted payload locally in the browser.
+- Passphrase: derives the AES-GCM key with PBKDF2-SHA256 and decrypts the encrypted payload locally in the browser.
+
+Passphrase lifecycle:
+
+- Create or enter the Care Passport passphrase before saving a private reflection.
+- The browser derives the encryption key locally; the raw passphrase is not written to Arkiv.
+- Saving encrypts the private JSON payload before Arkiv storage.
+- Loading records fetches encrypted envelopes first, then decrypts readable entries locally after the passphrase is entered.
+- If the passphrase is lost, private reflection text cannot be recovered. Arkiv can still prove the record exists, but it cannot decrypt the ciphertext.
 
 Encrypted:
 

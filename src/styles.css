@@ -598,8 +598,9 @@ summary:focus-visible {
 }
 
 .care-intro h1 {
-  max-width: 14ch;
-  font-size: clamp(32px, 5vw, 64px);
+  max-width: none;
+  font-size: clamp(32px, 4.2vw, 64px);
+  white-space: nowrap;
 }
 
 .care-workbench h1,
@@ -745,17 +746,29 @@ summary:focus-visible {
   padding: var(--space-6) clamp(16px, 4vw, 36px) var(--space-12);
 }
 
+.care-wrap {
+  padding-top: var(--space-4);
+}
+
 .care-section {
   border-bottom: 1px solid var(--border);
 }
 
-.care-section-head,
-.care-intro {
+.care-section-head {
   display: grid;
   grid-template-columns: minmax(0, 0.82fr) minmax(300px, 0.68fr);
   gap: var(--space-8);
   align-items: end;
   margin-bottom: var(--space-6);
+}
+
+.care-intro {
+  max-width: 860px;
+  margin-bottom: var(--space-6);
+}
+
+.care-intro .care-label {
+  margin-bottom: var(--space-3);
 }
 
 .care-flow-grid,
@@ -886,6 +899,12 @@ summary:focus-visible {
   gap: var(--space-4);
 }
 
+.care-side-stack {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
 .care-form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -981,6 +1000,13 @@ summary:focus-visible {
 
 .care-key-stack .care-actions {
   align-items: stretch;
+}
+
+.care-recovery-note {
+  margin: 0;
+  max-width: 58ch;
+  color: var(--warn);
+  font-size: var(--text-sm);
 }
 
 .care-preview {
@@ -1540,6 +1566,7 @@ summary:focus-visible {
   .care-hero h1,
   .care-intro h1 {
     font-size: clamp(var(--text-3xl), 18vw, var(--text-4xl));
+    white-space: normal;
   }
 
   .care-home .care-hero {

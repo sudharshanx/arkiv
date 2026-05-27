@@ -54,6 +54,7 @@ type Feedback = {
   txHash?: string;
 };
 type Toast = { message: string; tone?: "success" | "error" };
+type MemoryAccessStatus = { label: "Active" | "Revoked" | "Expired" | "Not shared"; tone: "success" | "danger" | "muted" };
 
 const REHEARSAL_WALLET = "0xA111111111111111111111111111111111111111";
 const REHEARSAL_KEY = "arkiv-care-local-key";
@@ -148,6 +149,28 @@ function grantStatus(grant: AccessGrantRecord): GrantStatus {
   return grant.status;
 }
 
+function mergeByEntityKey<T extends { entityKey: string }>(fallback: T[], primary: T[]): T[] {
+  const merged = new Map<string, T>();
+  fallback.forEach((item) => merged.set(item.entityKey, item));
+  primary.forEach((item) => merged.set(item.entityKey, item));
+  return Array.from(merged.values());
+}
+
+function memoryAccessStatus(note: NoteRecord, grants: AccessGrantRecord[]): MemoryAccessStatus {
+  const relevantGrants = grants
+    .filter((grant) => grant.decrypted?.includedNoteKeys.includes(note.entityKey))
+    .sort((a, b) => b.createdAt - a.createdAt);
+
+  if (!relevantGrants.length) return { label: "Not shared", tone: "muted" };
+
+  const activeGrant = relevantGrants.find((grant) => grantStatus(grant) === "active");
+  if (activeGrant) return { label: "Active", tone: "success" };
+
+  const latestStatus = grantStatus(relevantGrants[0]);
+  if (latestStatus === "revoked") return { label: "Revoked", tone: "danger" };
+  return { label: "Expired", tone: "muted" };
+}
+
 function isCareReflection(type: string): type is CareReflectionType {
   return Object.prototype.hasOwnProperty.call(reflectionTypeLabels, type);
 }
@@ -163,6 +186,11 @@ function safeText(value: string | undefined, fallback = "Encrypted reflection"):
 
 function normalizeAddress(address: string): string {
   return address.toLowerCase();
+}
+
+function generateLocalPassphrase(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(18));
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("").match(/.{1,6}/g)?.join("-") ?? "";
 }
 
 function transactionHashFromMessage(message: string): string | undefined {
@@ -356,7 +384,7 @@ function HomePage() {
         <aside className="care-console" aria-label="Care Passport access preview">
           <div className="care-console-head">
             <span className="label">CARE PASSPORT</span>
-            <span className="label">Local key active</span>
+            <span className="label">Passphrase unlocked</span>
           </div>
           <div className="care-console-body">
             <div className="care-console-column">
@@ -506,10 +534,12 @@ function CareApp() {
   const walletVaults = walletOwner ? vaults.filter((vault) => normalizeAddress(vault.owner) === walletOwner) : [];
   const activeVault = walletVaults.find((vault) => vault.entityKey === activeVaultKey) ?? walletVaults[0];
   const activeVaultNotes = notes.filter((note) => note.vaultKey === activeVault?.entityKey && note.status === "active");
+  const demoNotes = demoData?.notes ?? [];
+  const demoGrants = demoData?.grant ? [demoData.grant] : [];
   const hasLiveRecords = Boolean(activeVaultNotes.length || grants.length);
   const usingDemoData = !hasLiveRecords;
-  const displayNotes = hasLiveRecords ? activeVaultNotes : demoData?.notes ?? [];
-  const displayGrants = hasLiveRecords ? grants : demoData?.grant ? [demoData.grant] : [];
+  const displayNotes = rehearsal ? mergeByEntityKey(demoNotes, activeVaultNotes) : hasLiveRecords ? activeVaultNotes : demoNotes;
+  const displayGrants = rehearsal ? mergeByEntityKey(demoGrants, grants) : hasLiveRecords ? grants : demoGrants;
   const displayVault = activeVault ?? demoData?.vault;
   const activeGrant = displayGrants.find((grant) => grantStatus(grant) === "active");
   const historyNotes = useMemo(() => [...displayNotes].sort((a, b) => b.createdAt - a.createdAt), [displayNotes]);
@@ -713,7 +743,12 @@ function CareApp() {
       setNotes(decryptedLoadedNotes);
       setLinks(loadedLinks);
       setGrants(decryptedLoadedGrants);
-      setNotice(`Loaded ${decryptedLoadedNotes.length} reflection entries and ${decryptedLoadedGrants.length} access grants.`);
+      const unlockedCount = decryptedLoadedNotes.filter((note) => note.decrypted).length;
+      setNotice(
+        passphrase.trim()
+          ? `Loaded ${decryptedLoadedNotes.length} reflection entries and decrypted ${unlockedCount} locally.`
+          : `Loaded ${decryptedLoadedNotes.length} encrypted reflection entries. Enter the passphrase to decrypt them locally.`,
+      );
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "Could not load Arkiv records.");
     } finally {
@@ -724,7 +759,7 @@ function CareApp() {
   async function ensureActiveDiarySpace(): Promise<VaultRecord> {
     if (activeVault && normalizeAddress(activeVault.owner) === walletOwner) return activeVault;
     if (!wallet) throw new Error("Connect a wallet before saving a reflection.");
-    if (!passphrase.trim() || !confirmedKey) throw new Error("Save or confirm the local key before writing.");
+    if (!passphrase.trim() || !confirmedKey) throw new Error("Save or confirm the Care Passport passphrase before writing.");
 
     const now = Date.now();
     const secret: VaultSecret = {
@@ -789,7 +824,7 @@ function CareApp() {
 
     try {
       if (!wallet) throw new Error("Connect a wallet before saving a reflection.");
-      if (!passphrase.trim() || !confirmedKey) throw new Error("Save or confirm the local key before saving.");
+      if (!passphrase.trim() || !confirmedKey) throw new Error("Save or confirm the Care Passport passphrase before saving.");
       const vault = await ensureActiveDiarySpace();
       const now = Date.now();
       const secret: NoteSecret = {
@@ -885,7 +920,7 @@ function CareApp() {
     try {
       if (!wallet) throw new Error("Connect a wallet before creating a grant.");
       if (!activeVault) throw new Error("Create or load a diary space before creating a grant.");
-      if (!passphrase.trim()) throw new Error("Enter the local key before preparing an access grant.");
+      if (!passphrase.trim()) throw new Error("Enter the Care Passport passphrase before preparing an access grant.");
       const included = shareWindowNotes.map((note) => note.entityKey);
       if (!included.length) throw new Error("Choose a time window that includes at least one readable memory before granting access.");
       if (!grantWallet.trim()) throw new Error("Enter the therapist wallet identity.");
@@ -1069,9 +1104,9 @@ function CareApp() {
   async function handleCopyKey() {
     try {
       await copyText(passphrase);
-      showToast("Local key copied.");
+      showToast("Passphrase copied. Keep it private; it unlocks decryption locally.");
     } catch {
-      showToast("Could not copy local key. Try again.", "error");
+      showToast("Could not copy passphrase. Try again.", "error");
     }
   }
 
@@ -1279,65 +1314,12 @@ function renderWriteView(props: {
   return (
     <section className="care-wrap">
       <div className="care-intro">
-        <div>
-          <p className="care-label">Create reflection</p>
-          <h1>Create a private reflection.</h1>
-          <p className="care-lead">
-            Structured entries help future care without forcing the user to retell everything. Content is encrypted
-            locally before it becomes a wallet-owned Arkiv record.
-          </p>
-        </div>
-        <div className="care-panel care-start-card">
-          <div className="care-step">
-            <div>
-              <span>01</span>
-              <h2>Connect wallet</h2>
-              <p>This owns the reflection before anything is saved.</p>
-            </div>
-            <div className="care-step-action">
-              <StatusDot tone={wallet ? "success" : "warn"}>{wallet ? "Wallet ready" : "Wallet needed"}</StatusDot>
-              <span className="care-wallet">{wallet ? (rehearsal ? "Local wallet" : shortAddress(wallet)) : "Use top-right MetaMask"}</span>
-            </div>
-          </div>
-
-          <div className="care-step key-panel">
-            <div>
-              <span>02</span>
-              <h2>Local key</h2>
-              <p>Generate or enter the key that unlocks this browser session.</p>
-            </div>
-            <div className="care-key-stack">
-              <TextField label="Local encryption key">
-                <input
-                  autoComplete="off"
-                  onChange={(event) => setPassphrase(event.target.value)}
-                  placeholder="Generate or enter a key before saving"
-                  value={passphrase}
-                />
-              </TextField>
-              <div className="care-actions">
-                <ActionButton
-                  className="primary"
-                  icon={<KeyRound size={16} />}
-                  onClick={() => {
-                    setPassphrase(REHEARSAL_KEY);
-                    setConfirmedKey(true);
-                  }}
-                >
-                  Generate key
-                </ActionButton>
-                <ActionButton disabled={!passphrase} icon={<Copy size={16} />} onClick={handleCopyKey}>
-                  Copy key
-                </ActionButton>
-              </div>
-              <label className="care-check compact">
-                <input checked={confirmedKey} onChange={(event) => setConfirmedKey(event.target.checked)} type="checkbox" />
-                <span>I saved this key or already know it.</span>
-              </label>
-              <StatusDot tone={keyReady ? "success" : "warn"}>{keyReady ? "Local key active" : "Local key needed"}</StatusDot>
-            </div>
-          </div>
-        </div>
+        <p className="care-label">Create reflection</p>
+        <h1>Create a private reflection.</h1>
+        <p className="care-lead">
+          Structured entries help future care without forcing the user to retell everything. Content is encrypted
+          locally before it becomes a wallet-owned Arkiv record.
+        </p>
       </div>
 
       <div className="care-two-column">
@@ -1440,7 +1422,72 @@ function renderWriteView(props: {
           )}
         </form>
 
-        <aside className="care-panel care-preview-panel">
+        <aside className="care-side-stack">
+          <div className="care-panel care-start-card">
+          <div className="care-step">
+            <div>
+              <span>01</span>
+              <h2>Connect wallet</h2>
+              <p>This owns the reflection before anything is saved.</p>
+            </div>
+            <div className="care-step-action">
+              <StatusDot tone={wallet ? "success" : "warn"}>{wallet ? "Wallet ready" : "Wallet needed"}</StatusDot>
+              <span className="care-wallet">{wallet ? (rehearsal ? "Local wallet" : shortAddress(wallet)) : "Use top-right MetaMask"}</span>
+            </div>
+          </div>
+
+          <div className="care-step key-panel">
+            <div>
+              <span>02</span>
+              <h2>Unlock private passport</h2>
+              <p>
+                Create or enter a passphrase. The browser derives the encryption key from it, then decrypts private
+                reflections locally.
+              </p>
+            </div>
+            <div className="care-key-stack">
+              <TextField label="Care Passport passphrase">
+                <input
+                  autoComplete="off"
+                  onChange={(event) => {
+                    setPassphrase(event.target.value);
+                    setConfirmedKey(false);
+                  }}
+                  placeholder="Generate or enter a passphrase before saving"
+                  value={passphrase}
+                />
+              </TextField>
+              <div className="care-actions">
+                <ActionButton
+                  className="primary"
+                  icon={<KeyRound size={16} />}
+                  onClick={() => {
+                    setPassphrase(generateLocalPassphrase());
+                    setConfirmedKey(true);
+                  }}
+                >
+                  Generate passphrase
+                </ActionButton>
+                <ActionButton disabled={!passphrase} icon={<Copy size={16} />} onClick={handleCopyKey}>
+                  Copy passphrase
+                </ActionButton>
+              </div>
+              <label className="care-check compact">
+                <input checked={confirmedKey} onChange={(event) => setConfirmedKey(event.target.checked)} type="checkbox" />
+                <span>I saved this passphrase or already know it.</span>
+              </label>
+              <StatusDot tone={keyReady ? "success" : "warn"}>
+                {keyReady ? "Private passport unlocked" : "Passphrase needed"}
+              </StatusDot>
+              <p className="care-recovery-note">
+                If this passphrase is lost, private reflections cannot be recovered. Arkiv can still prove the record
+                exists, but it cannot decrypt the text.
+              </p>
+            </div>
+          </div>
+          </div>
+
+          <div className="care-panel care-preview-panel">
           <div className="care-panel-head">
             <div>
               <p className="care-label">What will be shared</p>
@@ -1460,10 +1507,10 @@ function renderWriteView(props: {
             ) : (
               <article className="care-entry-preview locked">
                 <span>Encrypted content</span>
-                <h3>Readable after local key</h3>
+                <h3>Readable after passphrase unlock</h3>
                 <p>
-                  Private diary content is hidden until the local key is active. Public metadata stays coarse so records
-                  can be found without exposing the reflection.
+                  Private diary content stays ciphertext until the passphrase derives the local decryption key. Public
+                  metadata stays coarse so records can be found without exposing the reflection.
                 </p>
               </article>
             )}
@@ -1471,8 +1518,9 @@ function renderWriteView(props: {
               <span>Record model</span>
               <p>Diary Space record: 90-day expiry on Braga.</p>
               <p>Reflection Entry record: 30-day expiry on Braga.</p>
-              <p>Encrypted with AES-GCM and PBKDF2-SHA256.</p>
+              <p>Passphrase to PBKDF2-SHA256 to AES-GCM encrypt/decrypt.</p>
             </div>
+          </div>
           </div>
         </aside>
       </div>
@@ -1527,34 +1575,11 @@ function renderGrantView(props: {
   return (
     <section className="care-wrap">
       <div className="care-intro">
-        <div>
-          <p className="care-label">Share access</p>
-          <h1>Choose who can see this.</h1>
-          <p className="care-lead">
-            Choose the therapist wallet, the notes, and the time window before any access is created.
-          </p>
-        </div>
-        <div className="care-panel care-start-card">
-          <div className="care-step">
-            <div>
-              <span>01</span>
-              <h2>Connect wallet</h2>
-              <p>Use the owner wallet before creating any access grant.</p>
-            </div>
-            <div className="care-step-action">
-              <StatusDot tone={wallet ? "success" : "warn"}>{wallet ? "Wallet ready" : "Wallet needed"}</StatusDot>
-              <span className="care-wallet">{wallet ? (rehearsal ? "Local wallet" : shortAddress(wallet)) : "Use top-right MetaMask"}</span>
-            </div>
-          </div>
-          <div className="care-step">
-            <div>
-              <span>02</span>
-              <h2>Share by time</h2>
-              <p>Default to the easiest option: share the last 7, 14, or 30 days of memories.</p>
-            </div>
-            <StatusDot tone="warn">Time window</StatusDot>
-          </div>
-        </div>
+        <p className="care-label">Share access</p>
+        <h1>Choose who can see this.</h1>
+        <p className="care-lead">
+          Choose the therapist wallet, the notes, and the time window before any access is created.
+        </p>
       </div>
 
       <div className="care-two-column">
@@ -1657,42 +1682,66 @@ function renderGrantView(props: {
           {renderFeedback(grantFeedback, "Grant")}
         </form>
 
-        <aside className="care-panel">
-          <div className="care-panel-head">
-            <h2>Access summary</h2>
-            <span>{shareWindowNotes.length} in window</span>
+        <aside className="care-side-stack">
+          <div className="care-panel care-start-card">
+            <div className="care-step">
+              <div>
+                <span>01</span>
+                <h2>Connect wallet</h2>
+                <p>Use the owner wallet before creating any access grant.</p>
+              </div>
+              <div className="care-step-action">
+                <StatusDot tone={wallet ? "success" : "warn"}>{wallet ? "Wallet ready" : "Wallet needed"}</StatusDot>
+                <span className="care-wallet">{wallet ? (rehearsal ? "Local wallet" : shortAddress(wallet)) : "Use top-right MetaMask"}</span>
+              </div>
+            </div>
+            <div className="care-step">
+              <div>
+                <span>02</span>
+                <h2>Share by time</h2>
+                <p>Default to the easiest option: share the last 7, 14, or 30 days of memories.</p>
+              </div>
+              <StatusDot tone="warn">Time window</StatusDot>
+            </div>
           </div>
-          <div className="care-review">
-            <article>
-              <span>Recipient wallet</span>
-              <h3>{grantWallet || "Wallet required"}</h3>
-              <p>{grantPurpose}</p>
-            </article>
-            <article>
-              <span>Share window</span>
-              <h3>{timeWindowLabel(grantDays)}</h3>
-              <p>Access expires after {grantDays} days and can be revoked before expiry.</p>
-            </article>
-            <article>
-              <span>Audience</span>
-              <h3>{grantAudienceLabel(grantScope)}</h3>
-              <p>{grantAudienceDescription(grantScope)}</p>
-            </article>
-            <article>
-              <span>Included notes</span>
-              <p>
-                {shareWindowNotes.length
-                  ? shareWindowNotes.map((note) => `- ${safeText(note.decrypted?.title)}`).join("\n")
-                  : "Choose a longer time window before granting access."}
-              </p>
-            </article>
-            <article>
-              <span>Privacy boundary</span>
-              <p>
-                Private diary content is encrypted locally. Arkiv stores encrypted records and proof metadata so
-                ownership, consent, and access can be verified.
-              </p>
-            </article>
+
+          <div className="care-panel">
+            <div className="care-panel-head">
+              <h2>Access summary</h2>
+              <span>{shareWindowNotes.length} in window</span>
+            </div>
+            <div className="care-review">
+              <article>
+                <span>Recipient wallet</span>
+                <h3>{grantWallet || "Wallet required"}</h3>
+                <p>{grantPurpose}</p>
+              </article>
+              <article>
+                <span>Share window</span>
+                <h3>{timeWindowLabel(grantDays)}</h3>
+                <p>Access expires after {grantDays} days and can be revoked before expiry.</p>
+              </article>
+              <article>
+                <span>Audience</span>
+                <h3>{grantAudienceLabel(grantScope)}</h3>
+                <p>{grantAudienceDescription(grantScope)}</p>
+              </article>
+              <article>
+                <span>Included notes</span>
+                <p>
+                  {shareWindowNotes.length
+                    ? shareWindowNotes.map((note) => `- ${safeText(note.decrypted?.title)}`).join("\n")
+                    : "Choose a longer time window before granting access."}
+                </p>
+              </article>
+              <article>
+                <span>Privacy boundary</span>
+                <p>
+                  Private diary content is encrypted locally. Arkiv stores encrypted records and proof metadata so
+                  ownership, consent, and access can be verified.
+                </p>
+              </article>
+            </div>
           </div>
         </aside>
       </div>
@@ -1804,12 +1853,6 @@ function renderWorkbenchView(props: {
             <p>{timeWindowLabel(grantDays)}</p>
           </div>
           <div className="care-dashboard-actions">
-            <ActionButton className="primary" disabled={!shareWindowCount} icon={<Clipboard size={16} />} onClick={handleCopyPacket}>
-              Copy care packet
-            </ActionButton>
-            <ActionButton disabled={!shareWindowCount} icon={<Copy size={16} />} onClick={handleCopyProof}>
-              Copy receipt
-            </ActionButton>
             <ActionButton icon={<RefreshCw size={16} />} onClick={loadWalletData}>
               {busy === "load" ? "Loading" : rehearsal ? "Reload rehearsal" : "Load from Arkiv"}
             </ActionButton>
@@ -1825,6 +1868,7 @@ function renderWorkbenchView(props: {
                 <th>Type</th>
                 <th>Tags</th>
                 <th>Share window</th>
+                <th>Access</th>
                 <th>Privacy</th>
               </tr>
             </thead>
@@ -1833,6 +1877,7 @@ function renderWorkbenchView(props: {
                 visibleHistoryNotes.map((note) => {
                   const privateLocked = Boolean(note.decrypted?.privateLocked);
                   const inWindow = shareWindowNotes.some((shareNote) => shareNote.entityKey === note.entityKey);
+                  const access = memoryAccessStatus(note, grants);
                   const active = activeMemoryKey === note.entityKey;
                   const saved = lastSavedMemoryKey === note.entityKey;
                   return (
@@ -1857,13 +1902,16 @@ function renderWorkbenchView(props: {
                       <td data-label="Type">{reflectionLabel(note)}</td>
                       <td data-label="Tags">{note.decrypted?.tags.join(", ") || "none"}</td>
                       <td data-label="Share window">{inWindow ? timeWindowLabel(grantDays) : "Archived"}</td>
+                      <td data-label="Access">
+                        <StatusDot tone={access.tone}>{access.label}</StatusDot>
+                      </td>
                       <td data-label="Privacy">{privateLocked ? "Private lock" : "Shareable"}</td>
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td className="care-empty-table" colSpan={6} data-label="Status">
+                  <td className="care-empty-table" colSpan={7} data-label="Status">
                     <strong>No memories match</strong>
                     <p>Adjust search or type filters to browse a different slice of history.</p>
                   </td>

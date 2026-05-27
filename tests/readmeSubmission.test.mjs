@@ -93,7 +93,9 @@ test("README explains the Arkiv model and Care Passport privacy boundaries", () 
   }
 
   assert.match(readme, /Wallet: owns the Arkiv entity and controls update\/delete permissions\./);
-  assert.match(readme, /Passphrase: decrypts the encrypted payload locally in the browser\./);
+  assert.match(readme, /Passphrase: derives the AES-GCM key with PBKDF2-SHA256 and decrypts the encrypted payload locally in the browser\./);
+  assert.match(readme, /Loading records fetches encrypted envelopes first, then decrypts readable entries locally after the passphrase is entered\./);
+  assert.match(readme, /If the passphrase is lost, private reflection text cannot be recovered\./);
   assert.match(readme, /Diary Space title and description/);
   assert.match(readme, /Reflection Entry body/);
   assert.match(readme, /Access Grant purpose and selected reflection entry keys/);
