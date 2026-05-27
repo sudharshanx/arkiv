@@ -948,21 +948,24 @@ summary:focus-visible {
 
 .care-start-card {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-4);
   align-self: start;
+  margin-bottom: var(--space-6);
 }
 
 .care-step {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-3);
-  padding-bottom: var(--space-4);
-  border-bottom: 1px solid var(--border);
+  min-width: 0;
+  padding-right: var(--space-4);
+  border-right: 1px solid var(--border);
 }
 
 .care-step:last-child {
-  padding-bottom: 0;
-  border-bottom: 0;
+  padding-right: 0;
+  border-right: 0;
 }
 
 .care-step > div > span {
@@ -1020,8 +1023,30 @@ summary:focus-visible {
 }
 
 .care-preview-panel {
-  background: color-mix(in oklab, var(--surface-warm), var(--surface) 60%);
-  border-color: color-mix(in oklab, var(--accent), var(--border) 55%);
+  background: color-mix(in oklab, var(--accent), var(--surface) 90%);
+  border-color: color-mix(in oklab, var(--accent), var(--border) 42%);
+  box-shadow: inset 4px 0 0 color-mix(in oklab, var(--accent), var(--surface) 12%);
+}
+
+.care-access-summary-panel {
+  background: color-mix(in oklab, var(--success), var(--surface) 91%);
+  border-color: color-mix(in oklab, var(--success), var(--border) 48%);
+  box-shadow: inset 4px 0 0 color-mix(in oklab, var(--success), var(--surface) 15%);
+}
+
+.care-linked-panel {
+  background: color-mix(in oklab, var(--warn), var(--surface) 92%);
+  border-color: color-mix(in oklab, var(--warn), var(--border) 55%);
+}
+
+.care-linked-panel.connected {
+  border-color: color-mix(in oklab, var(--warn), var(--border) 35%);
+  box-shadow: inset 4px 0 0 var(--warn);
+}
+
+.care-access-summary-panel .care-review,
+.care-linked-panel .care-review {
+  background: color-mix(in oklab, var(--bg), var(--surface) 14%);
 }
 
 .care-entry-preview {
@@ -1536,6 +1561,22 @@ summary:focus-visible {
   .care-trust-grid,
   .care-feedback-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .care-start-card {
+    grid-template-columns: 1fr;
+  }
+
+  .care-step {
+    padding-right: 0;
+    padding-bottom: var(--space-4);
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .care-step:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
   }
 
   .care-trust-grid > div {

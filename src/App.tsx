@@ -1322,6 +1322,70 @@ function renderWriteView(props: {
         </p>
       </div>
 
+      <div className="care-panel care-start-card">
+        <div className="care-step">
+          <div>
+            <span>01</span>
+            <h2>Connect wallet</h2>
+            <p>This owns the reflection before anything is saved.</p>
+          </div>
+          <div className="care-step-action">
+            <StatusDot tone={wallet ? "success" : "warn"}>{wallet ? "Wallet ready" : "Wallet needed"}</StatusDot>
+            <span className="care-wallet">{wallet ? (rehearsal ? "Local wallet" : shortAddress(wallet)) : "Use top-right MetaMask"}</span>
+          </div>
+        </div>
+
+        <div className="care-step key-panel">
+          <div>
+            <span>02</span>
+            <h2>Unlock private passport</h2>
+            <p>
+              Create or enter a passphrase. The browser derives the encryption key from it, then decrypts private
+              reflections locally.
+            </p>
+          </div>
+          <div className="care-key-stack">
+            <TextField label="Care Passport passphrase">
+              <input
+                autoComplete="off"
+                onChange={(event) => {
+                  setPassphrase(event.target.value);
+                  setConfirmedKey(false);
+                }}
+                placeholder="Generate or enter a passphrase before saving"
+                value={passphrase}
+              />
+            </TextField>
+            <div className="care-actions">
+              <ActionButton
+                className="primary"
+                icon={<KeyRound size={16} />}
+                onClick={() => {
+                  setPassphrase(generateLocalPassphrase());
+                  setConfirmedKey(true);
+                }}
+              >
+                Generate passphrase
+              </ActionButton>
+              <ActionButton disabled={!passphrase} icon={<Copy size={16} />} onClick={handleCopyKey}>
+                Copy passphrase
+              </ActionButton>
+            </div>
+            <label className="care-check compact">
+              <input checked={confirmedKey} onChange={(event) => setConfirmedKey(event.target.checked)} type="checkbox" />
+              <span>I saved this passphrase or already know it.</span>
+            </label>
+            <StatusDot tone={keyReady ? "success" : "warn"}>
+              {keyReady ? "Private passport unlocked" : "Passphrase needed"}
+            </StatusDot>
+            <p className="care-recovery-note">
+              If this passphrase is lost, private reflections cannot be recovered. Arkiv can still prove the record
+              exists, but it cannot decrypt the text.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="care-two-column">
         <form className="care-panel care-stack" onSubmit={handleSaveReflection}>
           <div className="care-panel-head">
@@ -1423,70 +1487,6 @@ function renderWriteView(props: {
         </form>
 
         <aside className="care-side-stack">
-          <div className="care-panel care-start-card">
-          <div className="care-step">
-            <div>
-              <span>01</span>
-              <h2>Connect wallet</h2>
-              <p>This owns the reflection before anything is saved.</p>
-            </div>
-            <div className="care-step-action">
-              <StatusDot tone={wallet ? "success" : "warn"}>{wallet ? "Wallet ready" : "Wallet needed"}</StatusDot>
-              <span className="care-wallet">{wallet ? (rehearsal ? "Local wallet" : shortAddress(wallet)) : "Use top-right MetaMask"}</span>
-            </div>
-          </div>
-
-          <div className="care-step key-panel">
-            <div>
-              <span>02</span>
-              <h2>Unlock private passport</h2>
-              <p>
-                Create or enter a passphrase. The browser derives the encryption key from it, then decrypts private
-                reflections locally.
-              </p>
-            </div>
-            <div className="care-key-stack">
-              <TextField label="Care Passport passphrase">
-                <input
-                  autoComplete="off"
-                  onChange={(event) => {
-                    setPassphrase(event.target.value);
-                    setConfirmedKey(false);
-                  }}
-                  placeholder="Generate or enter a passphrase before saving"
-                  value={passphrase}
-                />
-              </TextField>
-              <div className="care-actions">
-                <ActionButton
-                  className="primary"
-                  icon={<KeyRound size={16} />}
-                  onClick={() => {
-                    setPassphrase(generateLocalPassphrase());
-                    setConfirmedKey(true);
-                  }}
-                >
-                  Generate passphrase
-                </ActionButton>
-                <ActionButton disabled={!passphrase} icon={<Copy size={16} />} onClick={handleCopyKey}>
-                  Copy passphrase
-                </ActionButton>
-              </div>
-              <label className="care-check compact">
-                <input checked={confirmedKey} onChange={(event) => setConfirmedKey(event.target.checked)} type="checkbox" />
-                <span>I saved this passphrase or already know it.</span>
-              </label>
-              <StatusDot tone={keyReady ? "success" : "warn"}>
-                {keyReady ? "Private passport unlocked" : "Passphrase needed"}
-              </StatusDot>
-              <p className="care-recovery-note">
-                If this passphrase is lost, private reflections cannot be recovered. Arkiv can still prove the record
-                exists, but it cannot decrypt the text.
-              </p>
-            </div>
-          </div>
-          </div>
-
           <div className="care-panel care-preview-panel">
           <div className="care-panel-head">
             <div>
@@ -1580,6 +1580,28 @@ function renderGrantView(props: {
         <p className="care-lead">
           Choose the therapist wallet, the notes, and the time window before any access is created.
         </p>
+      </div>
+
+      <div className="care-panel care-start-card">
+        <div className="care-step">
+          <div>
+            <span>01</span>
+            <h2>Connect wallet</h2>
+            <p>Use the owner wallet before creating any access grant.</p>
+          </div>
+          <div className="care-step-action">
+            <StatusDot tone={wallet ? "success" : "warn"}>{wallet ? "Wallet ready" : "Wallet needed"}</StatusDot>
+            <span className="care-wallet">{wallet ? (rehearsal ? "Local wallet" : shortAddress(wallet)) : "Use top-right MetaMask"}</span>
+          </div>
+        </div>
+        <div className="care-step">
+          <div>
+            <span>02</span>
+            <h2>Share by time</h2>
+            <p>Default to the easiest option: share the last 7, 14, or 30 days of memories.</p>
+          </div>
+          <StatusDot tone="warn">Time window</StatusDot>
+        </div>
       </div>
 
       <div className="care-two-column">
@@ -1683,29 +1705,7 @@ function renderGrantView(props: {
         </form>
 
         <aside className="care-side-stack">
-          <div className="care-panel care-start-card">
-            <div className="care-step">
-              <div>
-                <span>01</span>
-                <h2>Connect wallet</h2>
-                <p>Use the owner wallet before creating any access grant.</p>
-              </div>
-              <div className="care-step-action">
-                <StatusDot tone={wallet ? "success" : "warn"}>{wallet ? "Wallet ready" : "Wallet needed"}</StatusDot>
-                <span className="care-wallet">{wallet ? (rehearsal ? "Local wallet" : shortAddress(wallet)) : "Use top-right MetaMask"}</span>
-              </div>
-            </div>
-            <div className="care-step">
-              <div>
-                <span>02</span>
-                <h2>Share by time</h2>
-                <p>Default to the easiest option: share the last 7, 14, or 30 days of memories.</p>
-              </div>
-              <StatusDot tone="warn">Time window</StatusDot>
-            </div>
-          </div>
-
-          <div className="care-panel">
+          <div className="care-panel care-access-summary-panel">
             <div className="care-panel-head">
               <h2>Access summary</h2>
               <span>{shareWindowNotes.length} in window</span>
@@ -1922,7 +1922,7 @@ function renderWorkbenchView(props: {
         </div>
       </div>
 
-      <aside className={classNames("care-panel care-drawer", activeHistoryNote && "connected")} aria-label="Memory details">
+      <aside className={classNames("care-panel care-drawer care-linked-panel", activeHistoryNote && "connected")} aria-label="Memory details">
         <div className="care-panel-head">
           <div>
             <p className="care-label">{activeHistoryNote ? "Linked row" : "Drawer"}</p>
