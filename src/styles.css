@@ -533,6 +533,13 @@ summary:focus-visible {
   text-transform: uppercase;
 }
 
+.care-home .care-footer {
+  color: var(--muted);
+  text-transform: none;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+
 .care-rehearsal-banner,
 .care-status-line,
 .care-alert {
@@ -1025,7 +1032,11 @@ summary:focus-visible {
   .care-two-column,
   .care-workspace,
   .care-flow-grid,
-  .care-console-body {
+  .care-console-body,
+  .care-home .care-section-split,
+  .care-home .care-step-grid,
+  .care-home .care-story-split,
+  .care-home .care-story-foot {
     grid-template-columns: 1fr;
   }
 
@@ -1037,6 +1048,14 @@ summary:focus-visible {
   .care-flow-grid article + article {
     border-top: 0;
     border-left: 1px solid var(--border);
+  }
+
+  .care-home .care-hero {
+    gap: var(--space-6);
+  }
+
+  .care-home .care-story-card {
+    min-width: 0;
   }
 
   .care-rail {
@@ -1082,6 +1101,20 @@ summary:focus-visible {
   .care-hero h1,
   .care-intro h1 {
     font-size: clamp(var(--text-3xl), 18vw, var(--text-4xl));
+  }
+
+  .care-home .care-hero {
+    margin-top: var(--space-3);
+    padding: var(--space-5) var(--space-4);
+    border-radius: 22px;
+  }
+
+  .care-home .care-hero h1 {
+    font-size: clamp(2.5rem, 15vw, 3.4rem);
+  }
+
+  .care-home .care-step-grid {
+    gap: var(--space-2);
   }
 
   .care-hero,

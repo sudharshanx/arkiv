@@ -28,6 +28,7 @@ import {
   fetchNotes,
   fetchVaults,
   PROJECT_ATTRIBUTE,
+  revokeAccessGrantEntity,
 } from "./lib/arkiv";
 import { decryptJson, encryptJson } from "./lib/crypto";
 import type {
@@ -256,10 +257,11 @@ function HomePage() {
     <main className="care-home">
       <header className="care-bar">
         <a className="care-brand" href="/">
-          <span className="care-brand-mark">CP</span>
-          <span>Care Passport</span>
+          <span className="care-brand-mark">AK</span>
+          <span>Arkiv Context</span>
         </a>
         <nav className="care-nav" aria-label="Product navigation">
+          <a href="/">Home</a>
           <a href={viewHref("write", false)}>Write</a>
           <a href={viewHref("grant", false)}>Grant</a>
           <a href={viewHref("workbench", false)}>Workbench</a>
@@ -268,38 +270,38 @@ function HomePage() {
 
       <section className="care-hero">
         <div className="care-hero-copy">
-          <p className="care-label">Therapist-ready care packet</p>
-          <h1>Change therapists without starting over.</h1>
+          <p className="care-label">Private memory for care continuity</p>
+          <h1>A diary you own. Context you choose to share.</h1>
           <p className="care-lead">
-            Care Passport prepares a therapist-ready care packet you control: choose the reflections, review what is
-            included, grant time-bound access, and copy only the context you approve.
+            Keep encrypted care notes in one place. Share only the context that helps the next therapist understand
+            you.
           </p>
           <p className="care-lead">
-            Care Passport is not an AI therapist or a medical record system. It is a consent layer for private care
-            context.
+            Arkiv Context is a private, wallet-owned life memory system. It is not an AI therapist and not a medical
+            record system.
           </p>
           <div className="care-actions">
-            <a className="care-btn primary" href={viewHref("grant", false)}>
-              <ShieldCheck size={16} />
-              <span>Prepare handoff</span>
-            </a>
-            <a className="care-btn" href={viewHref("write", false)}>
+            <a className="care-btn primary" href={viewHref("write", false)}>
               <Plus size={16} />
-              <span>Write reflection</span>
+              <span>Write a note</span>
+            </a>
+            <a className="care-btn" href={viewHref("grant", false)}>
+              <ShieldCheck size={16} />
+              <span>Choose what to share</span>
             </a>
           </div>
         </div>
 
         <aside className="care-console" aria-label="Private care continuity console">
           <div className="care-console-head">
-            <span>Care Passport</span>
-            <span>Local key active</span>
+            <span className="label">ARKIV://PRIVATE-DIARY</span>
+            <span className="label">Local key active</span>
           </div>
           <div className="care-console-body">
             <div className="care-console-column">
               <article className="care-memory-card selected">
                 <span>Life event</span>
-                <strong>New city, new therapist</strong>
+                <strong>Moved to a new city</strong>
                 <small>Updated May 24 / encrypted</small>
               </article>
               <article className="care-memory-card selected">
@@ -308,24 +310,21 @@ function HomePage() {
                 <small>Updated May 21 / encrypted</small>
               </article>
               <article className="care-memory-card private">
-                <span>Private locked</span>
-                <strong>Family context note</strong>
-                <small>Excluded until selected</small>
+                <span>Preference</span>
+                <strong>Ask before reframing family history</strong>
+                <small>Locked until selected</small>
               </article>
             </div>
             <div className="care-console-column">
               <div className="care-grant-preview">
                 <span>Consent review</span>
-                <h3>14-day care grant</h3>
-                <p>Limited to one therapist wallet identity and expires unless the user renews it.</p>
+                <h3>14-day access</h3>
+                <p>Give one therapist time-bound access. It ends automatically unless you renew it.</p>
                 <strong>Ready to grant</strong>
               </div>
               <div className="care-grant-preview">
                 <span>Privacy boundary</span>
-                <p>
-                  Private diary content is encrypted locally. Arkiv stores encrypted records and proof metadata for
-                  ownership and consent.
-                </p>
+                <p>Private diary content is encrypted locally. Arkiv stores encrypted records and proof metadata so ownership and consent stay clear.</p>
               </div>
             </div>
           </div>
@@ -340,35 +339,35 @@ function HomePage() {
         <div className="care-section-head">
           <div>
             <p className="care-label">Core flow</p>
-            <h2>Choose. Review. Share. Expire.</h2>
+            <h2>Write. Protect. Grant. Use. Revoke.</h2>
           </div>
           <p>
-            Care Passport turns private reflections into a bounded handoff packet. Every screen keeps the recipient,
-            purpose, expiry, and private boundary close to the next action.
+            The user owns the diary entries, encrypts them locally, and controls who can see them, for how long, and
+            for what purpose.
           </p>
         </div>
         <div className="care-flow-grid">
           <article>
-            <span>Choose</span>
-            <h3>Structured Reflection Entries</h3>
-            <p>Capture events, feelings, triggers, coping patterns, goals, relationships, and preferences.</p>
+            <span>Write</span>
+            <h3>Structured reflections</h3>
+            <p>Capture life events, emotions, triggers, coping patterns, therapy goals, and preferences.</p>
           </article>
           <article>
-            <span>Review</span>
-            <h3>Consent before sharing</h3>
-            <p>Confirm the recipient, purpose, duration, included entries, and what stays private.</p>
+            <span>Protect</span>
+            <h3>Local encryption</h3>
+            <p>Encrypt the diary on your device before it becomes a wallet-owned Arkiv record.</p>
           </article>
           <article>
-            <span>Share</span>
-            <h3>Continuity Brief</h3>
-            <p>Copy a therapist-ready packet with proof available when the recipient needs to inspect it.</p>
+            <span>Grant</span>
+            <h3>Time-bound sharing</h3>
+            <p>Give a therapist wallet access to the context you approve, for the time you choose.</p>
           </article>
         </div>
       </section>
 
       <footer className="care-footer">
-        <span>Care Passport</span>
-        <span>Your care context moves with you, under your control</span>
+        <span>Arkiv Context</span>
+        <span>Your life context should move with you, but stay under your control</span>
       </footer>
     </main>
   );
@@ -408,7 +407,7 @@ function CareApp() {
   const walletVaults = walletOwner ? vaults.filter((vault) => normalizeAddress(vault.owner) === walletOwner) : [];
   const activeVault = walletVaults.find((vault) => vault.entityKey === activeVaultKey) ?? walletVaults[0];
   const activeVaultNotes = notes.filter((note) => note.vaultKey === activeVault?.entityKey && note.status === "active");
-  const activeGrant = grants.find((grant) => grantStatus(grant) === "active") ?? grants[0];
+  const activeGrant = grants.find((grant) => grantStatus(grant) === "active");
   const readableNotes = activeVaultNotes.filter((note) => note.decrypted);
   const eligibleNotes = readableNotes.filter((note) => !note.decrypted?.privateLocked);
   const selectedNotes = eligibleNotes.filter((note) => selectedKeys.has(note.entityKey));
@@ -860,11 +859,54 @@ function CareApp() {
     });
   }
 
-  function revokeGrant(grantKey: string) {
-    setGrants((current) =>
-      current.map((grant) => (grant.entityKey === grantKey ? { ...grant, status: "revoked" } : grant)),
-    );
-    showToast("Access grant revoked for this session.");
+  async function revokeGrant(grantKey: string) {
+    setError("");
+    setBusy("revoke");
+
+    try {
+      if (!wallet) throw new Error("Connect a wallet before revoking a grant.");
+      const grant = grants.find((item) => item.entityKey === grantKey);
+      if (!grant) throw new Error("Access grant was not found in this session.");
+
+      if (rehearsal) {
+        setGrants((current) =>
+          current.map((item) => (item.entityKey === grantKey ? { ...item, status: "revoked" } : item)),
+        );
+        setGrantFeedback({
+          entityKey: grantKey,
+          message: "Access grant revoked in local rehearsal. No Arkiv transaction was sent.",
+          phase: "complete",
+          txHash: rehearsalTxHash(Date.now()),
+        });
+        showToast("Access grant revoked in local rehearsal.");
+        return;
+      }
+
+      setGrantFeedback({ entityKey: grantKey, message: "Open MetaMask and confirm the grant revoke.", phase: "waiting" });
+      const result = await revokeAccessGrantEntity({
+        grant,
+        owner: wallet,
+        onTransactionSubmitted: (txHash) => {
+          setGrantFeedback({ entityKey: grantKey, message: "Grant revoke transaction submitted to Braga.", phase: "submitted", txHash });
+        },
+      });
+      setGrants((current) =>
+        current.map((item) => (item.entityKey === grantKey ? { ...item, status: "revoked" } : item)),
+      );
+      setGrantFeedback({
+        entityKey: result.entityKey,
+        message: "Access grant revoke confirmed on Braga.",
+        phase: "complete",
+        txHash: result.txHash,
+      });
+      showToast("Access grant revoked on Braga.");
+    } catch (revokeError) {
+      const message = revokeError instanceof Error ? revokeError.message : "Could not revoke access grant.";
+      setGrantFeedback({ entityKey: grantKey, message, phase: "error", txHash: transactionHashFromMessage(message) });
+      setError(message);
+    } finally {
+      setBusy("");
+    }
   }
 
   async function handleCopyPacket() {
