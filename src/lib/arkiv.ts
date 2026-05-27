@@ -103,6 +103,10 @@ type CreateEntityInput = {
   expiresIn: number;
 };
 
+type UpdateEntityInput = CreateEntityInput & {
+  entityKey: string;
+};
+
 function asString(value: unknown, fallback = ""): string {
   return typeof value === "string" ? value : fallback;
 }
@@ -344,6 +348,25 @@ function entityToTxData(entity: CreateEntityInput): Hex {
   ]) as Hex;
 }
 
+function updateEntityToTxData(entity: UpdateEntityInput): Hex {
+  return toRlp([
+    [],
+    [
+      [
+        entity.entityKey as Hex,
+        toHex(entity.contentType),
+        toHex(Math.ceil(entity.expiresIn / BLOCK_TIME_SECONDS)),
+        toHex(entity.payload),
+        entity.attributes.filter((attribute) => typeof attribute.value === "string").map(formatAttribute),
+        entity.attributes.filter((attribute) => typeof attribute.value === "number").map(formatAttribute),
+      ],
+    ],
+    [],
+    [],
+    [],
+  ]) as Hex;
+}
+
 async function compressArkivTxData(data: Hex): Promise<Uint8Array> {
   const raw = toBytes(data);
   const compressed = await brotliCompressBrowser(raw);
@@ -435,6 +458,37 @@ async function createEntityWithBrowserBrotli(
   return {
     txHash: receipt.transactionHash,
     entityKey,
+  };
+}
+
+async function updateEntityWithBrowserBrotli(
+  ownerAddress: string,
+  entity: UpdateEntityInput,
+  options: { onTransactionSubmitted?: (txHash: string) => void } = {},
+): Promise<{ entityKey: string; txHash?: string }> {
+  await ensureBragaNetwork();
+  const walletClient = getWalletClient(ownerAddress);
+  const nonceState = await getBragaNonceState(ownerAddress);
+  const compressed = await compressArkivTxData(updateEntityToTxData(entity));
+  const txHash = await walletClient.sendTransaction({
+    account: ownerAddress as EthereumAddress,
+    chain: braga,
+    to: ARKIV_ADDRESS,
+    value: 0n,
+    data: toHex(compressed),
+    nonce: nonceState.next,
+    ...ARKIV_WRITE_TX_PARAMS,
+  });
+  options.onTransactionSubmitted?.(txHash);
+  const receipt = await waitForTransactionReceiptFromRpc(txHash, ownerAddress);
+
+  if (receipt.status === "reverted") {
+    throw new Error(`Arkiv transaction reverted: ${receipt.transactionHash}`);
+  }
+
+  return {
+    txHash: receipt.transactionHash,
+    entityKey: receipt.logs[0]?.topics[1] ?? entity.entityKey,
   };
 }
 
@@ -566,6 +620,44 @@ export async function createAccessGrantEntity(params: {
         { key: "expiresAt", value: params.expiresAt },
       ],
       expiresIn: grantExpiresIn(params.expiresAt),
+    },
+    { onTransactionSubmitted: params.onTransactionSubmitted },
+  );
+
+  return result;
+}
+
+export async function revokeAccessGrantEntity(params: {
+  grant: AccessGrantRecord;
+  owner: string;
+  onTransactionSubmitted?: (txHash: string) => void;
+}): Promise<{ entityKey: string; txHash?: string }> {
+  if (params.grant.status === "revoked") {
+    throw new Error("Access grant is already revoked.");
+  }
+
+  const now = Date.now();
+  const result = await updateEntityWithBrowserBrotli(
+    params.owner,
+    {
+      entityKey: params.grant.entityKey,
+      payload: jsonToPayload(params.grant.envelope),
+      contentType: "application/json",
+      attributes: [
+        PROJECT_ATTRIBUTE,
+        { key: "entityType", value: "access_grant" },
+        { key: "schemaVersion", value: 1 },
+        { key: "owner", value: params.grant.owner.toLowerCase() },
+        { key: "vaultKey", value: params.grant.vaultKey },
+        { key: "therapistWallet", value: params.grant.therapistWallet.toLowerCase() },
+        { key: "scope", value: params.grant.scope },
+        { key: "status", value: "revoked" },
+        { key: "createdAt", value: params.grant.createdAt },
+        { key: "expiresAt", value: params.grant.expiresAt },
+        { key: "updatedAt", value: now },
+        { key: "revokedAt", value: now },
+      ],
+      expiresIn: grantExpiresIn(params.grant.expiresAt),
     },
     { onTransactionSubmitted: params.onTransactionSubmitted },
   );

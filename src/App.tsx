@@ -1504,7 +1504,7 @@ function renderWorkbenchView(props: {
   readableNotes: NoteRecord[];
   rehearsal: boolean;
   renderFeedback: (feedback: Feedback, label: string) => ReactNode;
-  revokeGrant: (grantKey: string) => void;
+  revokeGrant: (grantKey: string) => Promise<void>;
   selectVisible: () => void;
   selectedKeys: Set<string>;
   selectedNotes: NoteRecord[];
@@ -1688,8 +1688,13 @@ function renderWorkbenchView(props: {
                 </p>
                 <p>Not included: private-locked and unselected entries stay out of this packet.</p>
               </div>
-              <ActionButton className="danger" icon={<XCircle size={16} />} onClick={() => revokeGrant(activeGrant.entityKey)}>
-                Revoke
+              <ActionButton
+                className="danger"
+                disabled={busy === "revoke"}
+                icon={<XCircle size={16} />}
+                onClick={() => void revokeGrant(activeGrant.entityKey)}
+              >
+                {busy === "revoke" ? "Revoking" : "Revoke"}
               </ActionButton>
             </div>
           ) : (
