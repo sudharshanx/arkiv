@@ -1571,6 +1571,13 @@ function renderGrantView(props: {
     wallet,
   } = props;
   const savedNote = notes.find((note) => note.entityKey === lastSavedMemoryKey);
+  const grantBlocker = !wallet
+    ? "Connect wallet first."
+    : !activeVault
+      ? "Create or load a diary space first."
+      : !shareWindowNotes.length
+        ? "No eligible memories in this time window. Use 30 days or save a non-private reflection."
+        : "";
 
   return (
     <section className="care-wrap">
@@ -1691,7 +1698,7 @@ function renderGrantView(props: {
           <div className="care-actions">
             <button
               className={classNames("care-btn", "primary", lastSavedMemoryKey && "highlight")}
-              disabled={busy === "grant" || !wallet || !activeVault || !shareWindowNotes.length}
+              disabled={busy === "grant"}
               type="submit"
             >
               <ShieldCheck size={16} />
@@ -1701,6 +1708,7 @@ function renderGrantView(props: {
               Review dashboard
             </ActionButton>
           </div>
+          {grantBlocker && <p className="care-blocker">{grantBlocker}</p>}
           {renderFeedback(grantFeedback, "Grant")}
         </form>
 
