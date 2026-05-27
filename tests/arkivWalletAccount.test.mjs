@@ -24,18 +24,28 @@ test("Arkiv wallet writes create a wallet client with the connected owner accoun
   );
   assert.match(
     normalizedArkivSource,
-    /sendTransaction\(\{.*data: toHex\(compressed\),.*\.\.\.ARKIV_WRITE_TX_PARAMS,/,
-    "browser-safe Arkiv write helper should pass explicit transaction fee parameters to MetaMask",
+    /const nonceState = await getBragaNonceState\(ownerAddress\);.*sendTransaction\(\{.*data: toHex\(compressed\),.*nonce: nonceState\.next,.*\.\.\.ARKIV_WRITE_TX_PARAMS,/,
+    "browser-safe Arkiv write helper should use Braga RPC nonce state and explicit transaction fee parameters",
   );
   assert.match(
     normalizedArkivSource,
-    /options\.onTransactionSubmitted\?\.\(txHash\); const receipt = await waitForTransactionReceiptFromRpc\(txHash\)/,
+    /options\.onTransactionSubmitted\?\.\(txHash\); const receipt = await waitForTransactionReceiptFromRpc\(txHash, ownerAddress\)/,
     "browser-safe Arkiv write helper should expose the transaction hash immediately after MetaMask approval, then poll Braga receipt directly",
   );
   assert.match(
     normalizedArkivSource,
-    /method: "eth_getTransactionReceipt"/,
+    /bragaRpc<RawTransactionReceipt \| null>\("eth_getTransactionReceipt"/,
     "Arkiv writes should use bounded direct receipt polling after MetaMask returns a transaction hash",
+  );
+  assert.match(
+    normalizedArkivSource,
+    /bragaRpc<string>\("eth_getTransactionCount"/,
+    "Arkiv writes should query Braga's latest and pending nonce before sending",
+  );
+  assert.match(
+    normalizedArkivSource,
+    /export function bragaTransactionUrl\(txHash: string\)/,
+    "Arkiv write errors should have a direct Braga Explorer transaction URL",
   );
   assert.match(
     normalizedArkivSource,
@@ -47,10 +57,10 @@ test("Arkiv wallet writes create a wallet client with the connected owner accoun
     /await ensureBragaNetwork\(\); const walletClient = getWalletClient\(ownerAddress\)/,
     "Arkiv writes should re-check the active MetaMask network immediately before submitting",
   );
-  assert.doesNotMatch(
+  assert.match(
     normalizedArkivSource,
-    /nonce, \.\.\.ARKIV_WRITE_TX_PARAMS/,
-    "Arkiv writes should not force a nonce through MetaMask because manual nonce overrides can make Braga reject the signed transaction",
+    /nonce: nonceState\.next/,
+    "Arkiv writes should not let MetaMask choose a stale queued nonce",
   );
 
   for (const functionName of ["createVaultEntity", "createNoteEntity", "createLinkEntity", "createAccessGrantEntity"]) {

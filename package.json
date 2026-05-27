@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit",
     "test": "tsc -p tsconfig.test.json && node --test tests/*.test.mjs",
     "verify:local": "node scripts/verify-local-rehearsal.mjs",
+    "verify:live-tx": "node scripts/verify-live-braga-write.mjs",
     "verify:workbench": "node scripts/verify-workbench.mjs"
   },
   "dependencies": {

@@ -66,10 +66,34 @@ type RawTransactionReceipt = {
   transactionHash?: string;
 };
 
+type RawTransaction = {
+  blockHash?: string | null;
+  blockNumber?: string | null;
+  hash?: string;
+  nonce?: string;
+};
+
 type ArkivTransactionReceipt = {
   logs: Array<{ topics: string[] }>;
   status: "success" | "reverted";
   transactionHash: string;
+};
+
+export type BragaNonceState = {
+  latest: number;
+  next: number;
+  pending: number;
+};
+
+export type BragaTransactionStatus = {
+  blockNumber?: number;
+  explorerUrl: string;
+  known: boolean;
+  latestNonce?: number;
+  mined: boolean;
+  nonce?: number;
+  pendingNonce?: number;
+  txHash: string;
 };
 
 type CreateEntityInput = {
@@ -148,6 +172,79 @@ function grantExpiresIn(expiresAt: number): number {
   }
 
   return Math.max(ExpirationTime.fromDate(new Date(expiresAt)), BLOCK_TIME_SECONDS);
+}
+
+function hexToSafeNumber(value: string): number {
+  const parsed = Number(BigInt(value));
+  if (!Number.isSafeInteger(parsed)) {
+    throw new Error(`RPC number is outside JavaScript's safe integer range: ${value}`);
+  }
+  return parsed;
+}
+
+async function bragaRpc<T>(method: string, params: unknown[]): Promise<T> {
+  const response = await fetch(BRAGA_RPC_URL, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: Date.now(),
+      method,
+      params,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Braga RPC ${method} failed with HTTP ${response.status}.`);
+  }
+
+  const payload = (await response.json()) as {
+    error?: { message?: string };
+    result?: T;
+  };
+
+  if (payload.error) {
+    throw new Error(payload.error.message ?? `Braga RPC ${method} returned an error.`);
+  }
+
+  return payload.result as T;
+}
+
+export function bragaTransactionUrl(txHash: string): string {
+  return `${BRAGA_EXPLORER_URL.replace(/\/$/, "")}/tx/${txHash}`;
+}
+
+export async function getBragaNonceState(ownerAddress: string): Promise<BragaNonceState> {
+  const [latestHex, pendingHex] = await Promise.all([
+    bragaRpc<string>("eth_getTransactionCount", [ownerAddress, "latest"]),
+    bragaRpc<string>("eth_getTransactionCount", [ownerAddress, "pending"]),
+  ]);
+  const latest = hexToSafeNumber(latestHex);
+  const pending = hexToSafeNumber(pendingHex);
+
+  return {
+    latest,
+    pending,
+    next: Math.max(latest, pending),
+  };
+}
+
+export async function getBragaTransactionStatus(txHash: string, ownerAddress?: string): Promise<BragaTransactionStatus> {
+  const transaction = await bragaRpc<RawTransaction | null>("eth_getTransactionByHash", [txHash]);
+  const nonceState = ownerAddress ? await getBragaNonceState(ownerAddress) : undefined;
+
+  return {
+    blockNumber: transaction?.blockNumber ? hexToSafeNumber(transaction.blockNumber) : undefined,
+    explorerUrl: bragaTransactionUrl(txHash),
+    known: Boolean(transaction),
+    latestNonce: nonceState?.latest,
+    mined: Boolean(transaction?.blockNumber),
+    nonce: transaction?.nonce ? hexToSafeNumber(transaction.nonce) : undefined,
+    pendingNonce: nonceState?.pending,
+    txHash,
+  };
 }
 
 export async function ensureBragaNetwork(): Promise<void> {
@@ -263,42 +360,18 @@ function wait(ms: number): Promise<void> {
 }
 
 async function getTransactionReceiptFromRpc(txHash: Hex): Promise<ArkivTransactionReceipt | null> {
-  const response = await fetch(BRAGA_RPC_URL, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      jsonrpc: "2.0",
-      id: Date.now(),
-      method: "eth_getTransactionReceipt",
-      params: [txHash],
-    }),
-  });
+  const result = await bragaRpc<RawTransactionReceipt | null>("eth_getTransactionReceipt", [txHash]);
 
-  if (!response.ok) {
-    throw new Error(`Braga RPC receipt check failed with HTTP ${response.status}.`);
-  }
-
-  const payload = (await response.json()) as {
-    error?: { message?: string };
-    result?: RawTransactionReceipt | null;
-  };
-
-  if (payload.error) {
-    throw new Error(payload.error.message ?? "Braga RPC returned an error while checking the transaction receipt.");
-  }
-
-  if (!payload.result) return null;
+  if (!result) return null;
 
   return {
-    logs: (payload.result.logs ?? []).map((log) => ({ topics: log.topics ?? [] })),
-    status: payload.result.status === "0x0" ? "reverted" : "success",
-    transactionHash: payload.result.transactionHash ?? txHash,
+    logs: (result.logs ?? []).map((log) => ({ topics: log.topics ?? [] })),
+    status: result.status === "0x0" ? "reverted" : "success",
+    transactionHash: result.transactionHash ?? txHash,
   };
 }
 
-async function waitForTransactionReceiptFromRpc(txHash: Hex): Promise<ArkivTransactionReceipt> {
+async function waitForTransactionReceiptFromRpc(txHash: Hex, ownerAddress: string): Promise<ArkivTransactionReceipt> {
   const startedAt = Date.now();
   let lastError = "";
 
@@ -314,8 +387,18 @@ async function waitForTransactionReceiptFromRpc(txHash: Hex): Promise<ArkivTrans
   }
 
   const suffix = lastError ? ` Last RPC error: ${lastError}` : "";
+  const status = await getBragaTransactionStatus(txHash, ownerAddress).catch(() => undefined);
+  const statusDetails = status
+    ? ` Explorer: ${status.explorerUrl}. Tx status: ${status.known ? (status.mined ? `mined in block ${status.blockNumber}` : "known but still pending") : "not found"}.${
+        typeof status.nonce === "number" ? ` Tx nonce: ${status.nonce}.` : ""
+      }${
+        typeof status.latestNonce === "number" && typeof status.pendingNonce === "number"
+          ? ` Braga latest nonce: ${status.latestNonce}; pending nonce: ${status.pendingNonce}.`
+          : ""
+      }`
+    : ` Explorer: ${bragaTransactionUrl(txHash)}.`;
   throw new Error(
-    `Timed out waiting for Braga receipt for ${txHash}. The transaction was submitted and may still confirm. Check Braga Explorer, then try loading wallet records again.${suffix}`,
+    `Timed out waiting for Braga receipt for ${txHash}. The transaction was submitted and may still confirm.${statusDetails} Try loading wallet records again after it confirms.${suffix}`,
   );
 }
 
@@ -326,6 +409,7 @@ async function createEntityWithBrowserBrotli(
 ): Promise<{ entityKey: string; txHash?: string }> {
   await ensureBragaNetwork();
   const walletClient = getWalletClient(ownerAddress);
+  const nonceState = await getBragaNonceState(ownerAddress);
   const compressed = await compressArkivTxData(entityToTxData(entity));
   const txHash = await walletClient.sendTransaction({
     account: ownerAddress as EthereumAddress,
@@ -333,10 +417,11 @@ async function createEntityWithBrowserBrotli(
     to: ARKIV_ADDRESS,
     value: 0n,
     data: toHex(compressed),
+    nonce: nonceState.next,
     ...ARKIV_WRITE_TX_PARAMS,
   });
   options.onTransactionSubmitted?.(txHash);
-  const receipt = await waitForTransactionReceiptFromRpc(txHash);
+  const receipt = await waitForTransactionReceiptFromRpc(txHash, ownerAddress);
 
   if (receipt.status === "reverted") {
     throw new Error(`Arkiv transaction reverted: ${receipt.transactionHash}`);

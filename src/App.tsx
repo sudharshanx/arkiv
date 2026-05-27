@@ -18,6 +18,7 @@ import "./styles.css";
 import {
   BRAGA_EXPLORER_URL,
   BRAGA_FAUCET_URL,
+  bragaTransactionUrl,
   connectWallet,
   createAccessGrantEntity,
   createNoteEntity,
@@ -162,6 +163,10 @@ function safeText(value: string | undefined, fallback = "Encrypted reflection"):
 
 function normalizeAddress(address: string): string {
   return address.toLowerCase();
+}
+
+function transactionHashFromMessage(message: string): string | undefined {
+  return message.match(/0x[a-fA-F0-9]{64}/)?.[0];
 }
 
 async function decryptVaults(vaults: VaultRecord[], passphrase: string): Promise<VaultRecord[]> {
@@ -740,7 +745,7 @@ function CareApp() {
       navigate("workbench");
     } catch (saveError) {
       const message = saveError instanceof Error ? saveError.message : "Could not save reflection.";
-      setEntryFeedback({ message, phase: "error" });
+      setEntryFeedback({ message, phase: "error", txHash: transactionHashFromMessage(message) });
       setError(message);
     } finally {
       setBusy("");
@@ -828,7 +833,7 @@ function CareApp() {
       navigate("workbench");
     } catch (grantError) {
       const message = grantError instanceof Error ? grantError.message : "Could not create access grant.";
-      setGrantFeedback({ message, phase: "error" });
+      setGrantFeedback({ message, phase: "error", txHash: transactionHashFromMessage(message) });
       setError(message);
     } finally {
       setBusy("");
@@ -901,6 +906,11 @@ function CareApp() {
           <small>
             {rehearsal ? "Local rehearsal tx" : "Braga tx"} {feedback.txHash.slice(0, 20)}...
           </small>
+        )}
+        {feedback.txHash && !rehearsal && (
+          <a href={bragaTransactionUrl(feedback.txHash)} rel="noreferrer" target="_blank">
+            Open transaction
+          </a>
         )}
       </div>
     );
